@@ -227,8 +227,8 @@ def create_key(pu_fname='key.prk', pr_fname='key.skr',debug=False):
     # print 'pr
 
     # 공개키와 개인키를 base64로 구성한다.
-    pu_data: str= base64.b64encode(marshal.dumps(pu))
-    pr_data: str= base64.b64encode(marshal.dumps(pr))
+    pu_data = base64.b64encode(marshal.dumps(pu))
+    pr_data = base64.b64encode(marshal.dumps(pr))
 
     try: # 공개키와 개인키를 파일로 만든다.
         open(pu_fname, 'wt').write(pu_data)
