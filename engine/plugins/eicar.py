@@ -1,6 +1,7 @@
 #-*-coding:utf-8 -*-
 import os
 import hashlib
+import cryptolib
 
 class KavMain:
 
@@ -30,9 +31,9 @@ class KavMain:
 
             size=os.path.getsize(filename)
             if size==68:
-                m=hashlib.md5()
-                m.update(mm[:68])
-                fmd5-m.hexdigest()
+                #크기가 일치한다면 md5 해시 계산
+                fmd5 = cryptolib.md5(mm[:68])
+
                 if fmd5=='44D88612FEA8A8F36DE82E1278ABB02F':
                     return True, 'EICAR-Test-File(not a virus)', 0
         except IOError:
@@ -61,7 +62,7 @@ class KavMain:
         info=dict()
 
         info['author']='SoaLee'
-        info['version']='1.0'
+        info['version']='1.1'
         info['title']='EICAR Scan Engine'
         info['kmd_name']='eicar'
 
