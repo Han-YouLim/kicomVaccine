@@ -151,13 +151,13 @@ def make(src_fname, debug = False) :
             os.remove(pyc_name)
 
             if debug:
-                print '    Success : %-13s ->  %s' % (fname, kmd_name)
+                print ('    Success : %-13s ->  %s' % (fname, kmd_name))
             return True
         else:
             raise IOError
     except IOError:
         if debug:
-            print '    Fail : %s' % fname
+            print ('    Fail : %s' % fname)
         return False
 
 
@@ -271,12 +271,12 @@ class KMD(KMDConstants):
         # KMD 파일에서 본문 읽기
         e_kmd_data = self.__get_body()
         if debug:
-            print len(e_kmd_data)
+            print (len(e_kmd_data))
 
         # 압축 해제하기
         self.body = zlib.decompress(e_kmd_data)
         if debug:
-            print len(self.body)
+            print (len(self.body))
 
     # ---------------------------------------------------------------------
     # __get_rc4_key(self)

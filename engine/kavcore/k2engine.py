@@ -440,7 +440,8 @@ class EngineInstance:
     # ---------------------------------------------------------------------
     def arclist(self, file_struct, fileformat):
 
-        arc_list =[] # 압축 파일 목록
+        import kernel
+
         file_scan_list = []  # 검사 대상 정보를 모두 가짐 (k2file.FileStruct)
 
         rname = file_struct.get_filename()
@@ -450,31 +451,47 @@ class EngineInstance:
 
         # 압축 엔진 모듈의 arclist 멤버 함수 호출
         for inst in self.kavmain_inst:
+            is_archive_engine = False
 
             try:
+                ret_getinfo = inst.getinfo()
+                if 'engine_type' in ret_getinfo:
+                    if ret_getinfo['engine_type'] == kernel.ARCHIVE_ENGINE:
+                        is_archive_engine = True
+            except AttributeError:
+                pass
+
+            try:
+                arc_list= [] # 압축 파일 리스트
+
                 if self.options['opt_arc']: # 압축 검사 옵션이 있으면 모두 호출
                     arc_list=inst.arclist(rname,fileformat)
 
-                if len(arc_list): # 압축 목록이 존재한다면 추가하고 종료
-                    for alist in arc_list:
-                        arc_id = alist[0]
-                        name = alist[1]
+                    if len(arc_list) and is_archive_engine: # 압축 목록이 존재한다면 추가하고 종료
+                        self.result['Packed']+=1
+                else:
+                    if not is_archive_engine:
+                        arc_list = inst.arclist(rname,fileformat)
+            except AttributeError:
+                pass
 
-                        if len(deep_name): # 압축 파일 내부 표시용
-                            dname = '%s/%s' %(deep_name,name)
-                        else:
-                            dname = '%s' %name
+            if len(arc_list):
+                for alist in arc_list:
+                    arc_id = alist[0]
+                    name = alist[1]
 
+                    if len(deep_name):
+                        dname='%s/%s' %(deep_name,name)
+                    else:
+                        dname='%s' %name
                         fs = k2file.FileStruct()
-                        # 기존 level 보다 1 증가시켜 압축 깊이가 깊어짐을 표시
                         fs.set_archive(arc_id,rname,name,dname,mname,False,False,level+1)
                         file_scan_list.append(fs)
 
-                        self.result['Packed']+=1
-                        break
-            except AttributeError:
-                continue
         return file_scan_list
+
+
+
 
 
     # ---------------------------------------------------------------------
