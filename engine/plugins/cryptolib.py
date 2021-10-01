@@ -45,7 +45,7 @@ class KavMain:
     def getinfo(self):  # 플러그인 엔진의 주요 정보
         info = dict()  # 사전형 변수 선언
 
-        info['author'] = 'Kei Choi'  # 제작자
+        info['author'] = 'cloudbread'  # 제작자
         info['version'] = '1.0'  # 버전
         info['title'] = 'Crypto Library'  # 엔진 설명
         info['kmd_name'] = 'cryptolib'  # 엔진 파일 이름

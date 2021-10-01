@@ -87,6 +87,35 @@ def cprint(msg, color):
 
     sys.stdout.flush()
 
+def convert_display_filename(real_filename):
+    # 출력용 이름
+    fsencoding = sys.getfilesystemencoding() or sys.getdefaultencoding()
+    display_filename = unicode(real_filename, fsencoding).encode(sys.stdout.encoding,'replace')
+    return display_filename
+
+def display_line(filename, message, message_color):
+    filename += ' '
+    filename = convert_display_filename(filename)
+    len_fname = len(filename)
+    len_msg = len(message)
+
+    if len_fname + 1 + len_msg < 79:
+        fname = '%s' % filename
+    else:
+        able_size = 79 - len_msg
+        able_size -= 5  # ...
+        min_size = able_size / 2
+        if able_size % 2 == 0:
+            fname1 = filename[:min_size-1]
+        else:
+            fname1 = filename[:min_size]
+        fname2 = filename[len_fname - min_size:]
+
+        fname = '%s ... %s' % (fname1, fname2)
+
+    cprint(fname + ' ', FOREGROUND_GREY)
+    cprint(message + '\n', message_color)
+
 # -------------------------------------------------------------------------
 # print_k2logo()
 # 백신 로고를 출력한다
@@ -96,16 +125,37 @@ def print_k2logo():
 Copyright (C) 1995-%s Kei Choi. All rights reserved.
 '''
 
-    print '------------------------------------------------------------'
+    print('------------------------------------------------------------')
     s = logo % (sys.platform.upper(), KAV_VERSION, KAV_BUILDDATE, KAV_LASTYEAR)
     cprint(s, FOREGROUND_CYAN | FOREGROUND_INTENSITY)
-    print '------------------------------------------------------------'
+    print('------------------------------------------------------------')
+
+
+# 파이썬의 옵션 파서 정의 (에러문 제어)
+class OptionParsingError(RuntimeError):
+    def __init__(self, msg):
+        self.msg = msg
+
+class OptionParsingExit(Exception):
+    def __init__(self, status, msg):
+        self.msg = msg
+        self.status = status
+
+class ModifiedOptionParser(OptionParser):
+    def error(self, msg):
+        raise OptionParsingError(msg)
+
+    def exit(self, status=0, msg=None):
+        raise OptionParsingExit(status, msg)
 
 # -------------------------------------------------------------------------
 # define_options()
 # 백신의 옵션을 정의한다
 # -------------------------------------------------------------------------
 def define_options():
+    usage = "Usage: %prog path[s] [options]"
+    parser = ModifiedOptionParser(add_help_option=False, usage=usage)
+
     usage = "Usage: %prog path[s] [options]"
     parser = ModifiedOptionParser(add_help_option=False, usage=usage)
 
@@ -191,7 +241,7 @@ def print_options():
         -?,  --help            this help
                                * = default option'''
 
-    print options_string
+    print(options_string)
 
 # -------------------------------------------------------------------------
 # disinfect의 콜백 함수
@@ -258,7 +308,6 @@ def print_result(result):
     cprint('I/O errors        :%d\n' % result['IO_errors'], FOREGROUND_GREY | FOREGROUND_INTENSITY)
 
     print
-
 
 
 # -------------------------------------------------------------------------

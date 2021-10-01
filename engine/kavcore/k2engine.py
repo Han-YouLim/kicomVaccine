@@ -2,7 +2,6 @@
 
 import os
 import imp
-import StringIO
 import datetime
 import tempfile
 import types
@@ -20,9 +19,6 @@ import k2rsa
 import k2file
 import k2const
 
-
-
-
 # ---------------------------------------------------------------------
 # 엔진 오류 메시지를 정의
 # ---------------------------------------------------------------------
@@ -33,7 +29,6 @@ class EngineKnownError(Exception):
 
     def __str__(self):
         return repr(self.value)
-
 
 # -------------------------------------------------------------------------
 # Engine 클래스
@@ -76,8 +71,8 @@ class Engine:
             return False
 
         if self.debug:
-            print '[*] kicom.kmd : '
-            print '   ', self.kmdfiles
+            print('[*] kicom.kmd : ')
+            print('   ', self.kmdfiles)
 
         # 우선순위대로 KMD 파일을 로딩한다.
         for kmd_name in self.kmdfiles:
@@ -91,9 +86,9 @@ class Engine:
                 self.__get_last_kmd_build_time(k)
 
         if self.debug:
-            print '[*] kmd_modules : '
-            print ' ', self.kmd_modules
-            print '[*] Last updated %s UTC' %self.max_datetime.ctime()
+            print('[*] kmd_modules : ')
+            print(' ', self.kmd_modules)
+            print('[*] Last updated %s UTC' %self.max_datetime.ctime())
 
         return True
 
@@ -159,7 +154,7 @@ class EngineInstance:
 
         if len(self.kavmain_inst):  # KavMain 인스턴스가 하나라도 있으면 성공
             if self.debug:
-                print '[*] Count of KavMain : %d' % (len(self.kavmain_inst))
+                print ('[*] Count of KavMain : %d' % (len(self.kavmain_inst)))
             return True
         else:
             return False
@@ -170,13 +165,13 @@ class EngineInstance:
 
     def uninit(self):
         if self.verbose:
-            print '[*] KavMain.uninit() :'
+            print ('[*] KavMain.uninit() :')
 
         for inst in self.kavmain_inst:
             try:
                 ret = inst.uninit()
                 if self.verbose:
-                    print '    [-] %s.uninit() : %d' % (inst.__module__, ret)
+                    print ('    [-] %s.uninit() : %d' % (inst.__module__, ret))
             except AttributeError:
                 continue
 
@@ -190,7 +185,7 @@ class EngineInstance:
         ginfo = []  # 플러그인 엔진 정보를 담는다.
 
         if self.verbose:
-            print '[*] KavMain.getinfo() :'
+            print('[*] KavMain.getinfo() :')
 
         for inst in self.kavmain_inst:
             try:
@@ -198,9 +193,9 @@ class EngineInstance:
                 ginfo.append(ret)
 
                 if self.verbose:
-                    print '    [-] %s.getinfo() :' % inst.__module__
+                    print('    [-] %s.getinfo() :' % inst.__module__)
                     for key in ret.keys():
-                        print '        - %-10s : %s' % (key, ret[key])
+                        print ('        - %-10s : %s' % (key, ret[key]))
             except AttributeError:
                 continue
 
@@ -226,7 +221,7 @@ class EngineInstance:
             return []
 
         if self.verbose:
-            print '[*] KavMain.listvirus() :'
+            print ('[*] KavMain.listvirus() :')
 
         for inst in self.kavmain_inst:
             try:
@@ -239,9 +234,9 @@ class EngineInstance:
                     vlist += ret
 
                 if self.verbose:
-                    print '    [-] %s.listvirus() :' % inst.__module__
+                    print ('    [-] %s.listvirus() :' % inst.__module__)
                     for vname in ret:
-                        print '        - %s' % vname
+                        print ('        - %s' % vname)
             except AttributeError:
                 continue
 
@@ -378,7 +373,7 @@ class EngineInstance:
         ret = False
 
         if self.debug:
-            print '[*] KavMain.disinfect() :'
+            print ('[*] KavMain.disinfect() :')
 
         try:
             # 악성코드를 진단한 플러그인 엔진에게만 치료를 요청한다.
@@ -386,7 +381,7 @@ class EngineInstance:
             ret = inst.disinfect(filename, malware_id)
 
             if self.debug:
-                print '    [-] %s.disinfect() : %s' % (inst.__module__, ret)
+                print ('    [-] %s.disinfect() : %s' % (inst.__module__, ret))
         except AttributeError:
             pass
 
@@ -439,8 +434,6 @@ class EngineInstance:
     # 리턴값 : [압축 파일 내부 리스트] or []
     # ---------------------------------------------------------------------
     def arclist(self, file_struct, fileformat):
-
-        import kernel
 
         file_scan_list = []  # 검사 대상 정보를 모두 가짐 (k2file.FileStruct)
 
