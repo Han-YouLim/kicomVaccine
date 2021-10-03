@@ -121,13 +121,3 @@ if __name__=='__main__':
     rc4.set_key('PASSWORD1234')
     t2 = rc4.crypt(t1) # 복호화
     print (t2)
-
-
-
-
-
-
-
-
-
-

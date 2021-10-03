@@ -1,4 +1,4 @@
-#-*-coding:utf-8 -*-
+# -*-coding:utf-8 -*-
 
 import base64
 import marshal
@@ -15,16 +15,18 @@ import random
 # 리턴값 : d, x, y - 유클리드 호제법 해
 ---------------------------------------------------------------------------
 '''
-def __ext_euclid(a,b):
+
+
+def __ext_euclid(a, b):
     i = -1
     list_r = list()
     list_q = list()
     list_x = list()
     list_y = list()
 
-    i +=1
-    list_r.append(a) # -1
-    list_r.append(b) # 0
+    i += 1
+    list_r.append(a)  # -1
+    list_r.append(b)  # 0
 
     list_q.append(0)  # -1
     list_q.append(0)  # 0
@@ -40,14 +42,14 @@ def __ext_euclid(a,b):
         list_r.append(list_r[i - 2] % list_r[i - 1])
         list_q.append(list_r[i - 2] / list_r[i - 1])
 
-        if list_r[i] == 0 :
-            d = list_r[i-1]
-            x = list_x[i-1]
-            y = list_y[i-1]
+        if list_r[i] == 0:
+            d = list_r[i - 1]
+            x = list_x[i - 1]
+            y = list_y[i - 1]
 
-            if x < 0 :
+            if x < 0:
                 x += b
-            if y < 0 :
+            if y < 0:
                 y += b
 
             return d, x, y
@@ -68,46 +70,49 @@ def __ext_euclid(a,b):
 # 리턴값 : 0 - 소수 아님, 1-> 소수
 ---------------------------------------------------------------------------
 '''
-def __mr(n) :
+
+
+def __mr(n):
     composite = 0
     inconclusive = 0
 
-    def get_kq(num) :
+    def get_kq(num):
         sub_k = 0
 
         sub_t = num - 1
         b_t = bin(sub_t)
 
-        for sub_i in range(len(b_t) -1, -1, -1) :
-            if b_t[sub_i] == '0' :
+        for sub_i in range(len(b_t) - 1, -1, -1):
+            if b_t[sub_i] == '0':
                 sub_k += 1
-            else :
+            else:
                 break
 
         sub_q = sub_t >> sub_k
-        return  sub_k, sub_q
+        return sub_k, sub_q
 
-    k,q = get_kq(n)
+    k, q = get_kq(n)
 
-    if k ==0 :
-        return 0 # 소수 아님
-    for i in range (10) :
-        a = int(random.uniform(2,n)) # 1<a<n
-        if pow(a,q,n)==1:
-            inconclusive +=1
+    if k == 0:
+        return 0  # 소수 아님
+    for i in range(10):
+        a = int(random.uniform(2, n))  # 1<a<n
+        if pow(a, q, n) == 1:
+            inconclusive += 1
             continue
 
-        t= 0
+        t = 0
         for j in range(k):
-            if pow(a,(2*j*q),n) == n -1 :
-                inconclusive +=1
-                t =1
+            if pow(a, (2 * j * q), n) == n - 1:
+                inconclusive += 1
+                t = 1
 
-        if t ==0:
+        if t == 0:
             composite += 1
 
-    if inconclusive >= 6 : # 통계적으로 계산에 의해 60%이상이면 소수로 인정
+    if inconclusive >= 6:  # 통계적으로 계산에 의해 60%이상이면 소수로 인정
         return 1
+
 
 '''
 ---------------------------------------------------------------------------
@@ -118,14 +123,17 @@ def __mr(n) :
 # 리턴값 : 홀수
 ---------------------------------------------------------------------------
 '''
-def __gen_number(gen_bit) :
+
+
+def __gen_number(gen_bit):
     random.seed()
 
-    b= ''
-    for i in range(gen_bit - 1) :
-        b+=str(int(random.uniform(1,10))%2)
-    b += '1' # 마지막 bit에 1을 추가하여 홀수를 만든다.
-    return int(b,2)
+    b = ''
+    for i in range(gen_bit - 1):
+        b += str(int(random.uniform(1, 10)) % 2)
+    b += '1'  # 마지막 bit에 1을 추가하여 홀수를 만든다.
+    return int(b, 2)
+
 
 '''
 ---------------------------------------------------------------------------
@@ -136,11 +144,14 @@ def __gen_number(gen_bit) :
 # 리턴값 : 소수
 ---------------------------------------------------------------------------
 '''
+
+
 def __gen_prime(gen_bit):
-    while 1 :
+    while 1:
         p = __gen_number(gen_bit)
         if __mr(p) == 1:
             return p
+
 
 '''
 ---------------------------------------------------------------------------
@@ -152,12 +163,16 @@ def __gen_prime(gen_bit):
 # 리턴값 : e,d
 ---------------------------------------------------------------------------
 '''
-def __get_ed (n):
+
+
+def __get_ed(n):
     while 1:
-        t = int(random.uniform(2,1000))
-        d,x,y = __ext_euclid(t,n)
-        if d ==1 :
-            return t,x
+        t = int(random.uniform(2, 1000))
+        d, x, y = __ext_euclid(t, n)
+        if d == 1:
+            return t, x
+
+
 '''
 ---------------------------------------------------------------------------
 # __value_to_string(val)
@@ -167,16 +182,20 @@ def __get_ed (n):
 # 리턴값 : 문자열
 ---------------------------------------------------------------------------
 '''
+
+
 def __value_to_string(val):
-    ret=''
+    ret = ''
     for i in range(32):
         b = val & 0xff
         val >>= 8
-        ret +=chr(b)
-        
-        if val == 0 :
+        ret += chr(b)
+
+        if val == 0:
             break
     return ret
+
+
 '''
 ---------------------------------------------------------------------------
 # __string_to_value(buf)
@@ -186,11 +205,14 @@ def __value_to_string(val):
 # 리턴값 : 숫자
 ---------------------------------------------------------------------------
 '''
+
+
 def __string_to_value(buf):
     plantext_ord = 0
     for i in range(len(buf)):
-        plantext_ord |=ord(buf[i]) << (i*8)
+        plantext_ord |= ord(buf[i]) << (i * 8)
     return plantext_ord
+
 
 '''
 ---------------------------------------------------------------------------
@@ -201,7 +223,9 @@ def __string_to_value(buf):
 # 리턴값 : 키 생성 성공 여부
 ---------------------------------------------------------------------------
 '''
-def create_key(pu_fname='key.prk', pr_fname='key.skr',debug=False):
+
+
+def create_key(pu_fname='key.prk', pr_fname='key.skr', debug=False):
     p = __gen_prime(128)
     q = __gen_prime(128)
 
@@ -211,9 +235,9 @@ def create_key(pu_fname='key.prk', pr_fname='key.skr',debug=False):
     n = p * q
     # print 'n
 
-    qn = (p -1) * (q - 1)
+    qn = (p - 1) * (q - 1)
 
-    #print 'Q(n)
+    # print 'Q(n)
 
     e = __get_ed(qn)
     d = __get_ed(qn)
@@ -230,17 +254,18 @@ def create_key(pu_fname='key.prk', pr_fname='key.skr',debug=False):
     pu_data = base64.b64encode(marshal.dumps(pu))
     pr_data = base64.b64encode(marshal.dumps(pr))
 
-    try: # 공개키와 개인키를 파일로 만든다.
+    try:  # 공개키와 개인키를 파일로 만든다.
         open(pu_fname, 'wt').write(pu_data)
         open(pr_fname, 'wt').write(pr_data)
-    except IOError :
+    except IOError:
         return False
 
     # 공개키와 개인키가 생성되었다.
     if debug:
-        print('[*] Make key : %s, %s' %(pu_fname, pr_fname))
+        print('[*] Make key : %s, %s' % (pu_fname, pr_fname))
 
     return True
+
 
 '''
 ---------------------------------------------------------------------------
@@ -251,9 +276,11 @@ def create_key(pu_fname='key.prk', pr_fname='key.skr',debug=False):
 # 리턴값 : rsa 키
 ---------------------------------------------------------------------------
 '''
+
+
 def read_key(key_filename):
     try:
-        with open(key_filename, 'rt') as fp :
+        with open(key_filename, 'rt') as fp:
             b = fp.read()
             s = base64.b64decode(b)
             key = marshal.loads(s)
@@ -261,6 +288,8 @@ def read_key(key_filename):
         return key
     except IOError:
         return None
+
+
 '''
 ---------------------------------------------------------------------------
 # crypt(buf, key)
@@ -271,10 +300,12 @@ def read_key(key_filename):
 # 리턴값 : 양복호화된 결과물
 ---------------------------------------------------------------------------
 '''
+
+
 def crypt(buf, key):
     plantext_ord = __string_to_value(buf)
 
     # 주어진 키로 양/복호화
-    val = pow(plantext_ord,key[0],key[1])
+    val = pow(plantext_ord, key[0], key[1])
 
     return __value_to_string(val)
