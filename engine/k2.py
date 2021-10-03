@@ -7,6 +7,10 @@ import os
 import sys
 from optparse import OptionParser
 
+from pip._vendor.appdirs import unicode
+
+import kavcore.k2engine
+
 from ctypes import windll, Structure, c_short, c_ushort,  byref
 
 # -------------------------------------------------------------------------
@@ -207,26 +211,7 @@ def scan_callback(ret_value):
 
     display_line(disp_name, message, message_color)
 
-    if g_options.opt_prompt:
-        while True and ret_value['result']: # 악성코드가 발견되었나?
-            cprint('Disinfect/Delete/Ignore/Quit? (d/l/i/q) : ', FOREGROUND_CYAN | FOREGROUND_INTENSITY)
-            ch = getch().lower()
-            print ch
 
-            if ch == 'd':
-                return kavcore.k2const.K2_ACTION_DISINFECT
-            elif ch == 'l':
-                return kavcore.k2const.K2_ACTION_DELETE
-            elif ch == 'i':
-                return kavcore.k2const.K2_ACTION_IGNORE
-            elif ch == 'q':
-                return kavcore.k2const.K2_ACTION_QUIT
-            elif g_options.opt_dis:  # 치료 옵션
-                return kavcore.k2const.K2_ACTION_DISINFECT
-            elif g_options.opt_del:  # 삭제 옵션
-                return kavcore.k2const.K2_ACTION_DELETE
-
-            return kavcore.k2const.K2_ACTION_IGNORE
 
 # -------------------------------------------------------------------------
 # print_options()
@@ -307,14 +292,53 @@ def print_result(result):
     cprint('Identified viruses:%d\n' % result['Identified_viruses'], FOREGROUND_GREY | FOREGROUND_INTENSITY)
     cprint('I/O errors        :%d\n' % result['IO_errors'], FOREGROUND_GREY | FOREGROUND_INTENSITY)
 
-    print
+
+def print_usage():
+    print('\nUsage: k2.py path[s[ [options]')
+
+
+def parser_options():
+    parser = define_options()  # 백신 옵션 정의
+
+    if len(sys.argv) < 2:
+        return 'NONE_OPTION', None
+    else:
+        try:
+            (options, args) = parser.parse_args()
+            if len(args) == 0:
+                return options, None
+        except OptionParsingError as e:  # 잘못된 옵션 사용일 경우
+            # print 'ERROR'
+            return 'ILLEGAL_OPTION', e.msg
+        except OptionParsingExit as e:
+            return 'ILLEGAL_OPTION', e.msg
+
+        return options, args
+
 
 
 # -------------------------------------------------------------------------
 # main()
 # -------------------------------------------------------------------------
 def main():
+    options, args = parser_options()
     print_k2logo()
+    # 잘못된 옵션인가?
+    if options == 'NONE_OPTION':  # 옵션이 없는 경우
+        print_usage()
+        print_options()
+        return 0
+    elif options == 'ILLEGAL_OPTION':  # 정의되지 않은 옵션을 사용한 경우
+        print_usage()
+        print('Error: %s' % args)  # 에러 메시지가 담겨 있음
+        return 0
+
+    # Help 옵션을 사용한 경우 또는 인자 값이 없는 경우
+    if options.opt_help:
+        print_usage()
+        print_options()
+        return 0
+
 
 if __name__=='__main__':
     main()

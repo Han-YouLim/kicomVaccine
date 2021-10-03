@@ -1,18 +1,13 @@
 # -*- coding:utf-8 -*-
 
+import sys
 import os
-import imp
 import datetime
+import imp
 import tempfile
 import types
 import mmap
 import glob
-import re
-import shutil
-import struct
-import zipfile
-import hashlib
-
 import k2timelib
 import k2kmdfile
 import k2rsa
@@ -22,6 +17,8 @@ import k2const
 # ---------------------------------------------------------------------
 # 엔진 오류 메시지를 정의
 # ---------------------------------------------------------------------
+from engine.plugins import kernel
+
 
 class EngineKnownError(Exception):
     def __init__(self, value):
