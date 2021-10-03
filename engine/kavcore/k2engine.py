@@ -1,6 +1,5 @@
 # -*- coding:utf-8 -*-
 
-import sys
 import os
 import datetime
 import imp
@@ -8,6 +7,7 @@ import tempfile
 import types
 import mmap
 import glob
+
 import k2timelib
 import k2kmdfile
 import k2rsa
