@@ -1,1 +1,1 @@
-this is k2kmdfile testing text file!
+Plugin-VaccineEngine Update Mode
