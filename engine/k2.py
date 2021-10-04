@@ -6,18 +6,15 @@
 import os
 import sys
 from optparse import OptionParser
-
-from pip._vendor.appdirs import unicode
-
 from engine import kavcore
-from .kavcore import k2engine
+
 
 from ctypes import windll, Structure, c_short, c_ushort,  byref
 
 # -------------------------------------------------------------------------
 # 주요 상수
 # -------------------------------------------------------------------------
-KAV_VERSION = '0.27'
+KAV_VERSION = '0.01'
 KAV_BUILDDATE = 'Sep 20 2021'
 KAV_LASTYEAR = KAV_BUILDDATE[len(KAV_BUILDDATE)-4:]
 
@@ -126,8 +123,8 @@ def display_line(filename, message, message_color):
 # 백신 로고를 출력한다
 # -------------------------------------------------------------------------
 def print_k2logo():
-    logo = '''KICOM Anti-Virus II (for %s) Ver %s (%s)
-Copyright (C) 1995-%s Kei Choi. All rights reserved.
+    logo = '''CloudBread Anti-Virus I (for %s) Ver %s (%s)
+Copyright (C) 2021-%s CloudBread. All rights reserved.
 '''
 
     print('------------------------------------------------------------')
@@ -211,8 +208,28 @@ def scan_callback(ret_value):
         message_color = FOREGROUND_GREY | FOREGROUND_INTENSITY
 
     display_line(disp_name, message, message_color)
+    '''
+    if g_options.opt_prompt:
+        while True and ret_value['result']: # 악성코드가 발견되었나?
+            cprint('Disinfect/Delete/Ignore/Quit? (d/l/i/q) : ', FOREGROUND_CYAN | FOREGROUND_INTENSITY)
+            ch = getch().lower()
+            print(ch)
 
+            if ch == 'd':
+                return kavcore.k2const.K2_ACTION_DISINFECT
+            elif ch == 'l':
+                return kavcore.k2const.K2_ACTION_DELETE
+            elif ch == 'i':
+                return kavcore.k2const.K2_ACTION_IGNORE
+            elif ch == 'q':
+                return kavcore.k2const.K2_ACTION_QUIT
+            elif g_options.opt_dis:  # 치료 옵션
+                return kavcore.k2const.K2_ACTION_DISINFECT
+            elif g_options.opt_del:  # 삭제 옵션
+                return kavcore.k2const.K2_ACTION_DELETE
 
+            return kavcore.k2const.K2_ACTION_IGNORE
+            '''
 
 # -------------------------------------------------------------------------
 # print_options()
@@ -281,6 +298,10 @@ def update_callback(ret_file_info):
 # 입력값 : result - 악성코드 검사 결과
 # -------------------------------------------------------------------------
 def print_result(result):
+
+    print
+    print
+
     cprint('Results:\n', FOREGROUND_GREY | FOREGROUND_INTENSITY)
     cprint('Folders           :%d\n' % result['Folders'], FOREGROUND_GREY | FOREGROUND_INTENSITY)
     cprint('Files             :%d\n' % result['Files'], FOREGROUND_GREY | FOREGROUND_INTENSITY)
@@ -289,9 +310,11 @@ def print_result(result):
     cprint('Identified viruses:%d\n' % result['Identified_viruses'], FOREGROUND_GREY | FOREGROUND_INTENSITY)
     cprint('I/O errors        :%d\n' % result['IO_errors'], FOREGROUND_GREY | FOREGROUND_INTENSITY)
 
+    print
+
 
 def print_usage():
-    print('\nUsage: k2.py path[s] [options]')
+    print('\nUsage: k2.py path[s[ [options]')
 
 
 def parser_options():
@@ -318,8 +341,10 @@ def parser_options():
 # main()
 # -------------------------------------------------------------------------
 def main():
+
     options, args = parser_options()
     print_k2logo()
+
     # 잘못된 옵션인가?
     if options == 'NONE_OPTION':  # 옵션이 없는 경우
         print_usage()
@@ -335,7 +360,6 @@ def main():
         print_usage()
         print_options()
         return 0
-
 
 if __name__=='__main__':
     main()
