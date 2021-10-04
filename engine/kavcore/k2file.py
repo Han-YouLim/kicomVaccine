@@ -5,6 +5,7 @@ import re
 import glob
 import shutil
 import tempfile
+from ..plugins import kernel
 # import psutil
 
 # -------------------------------------------------------------------------
