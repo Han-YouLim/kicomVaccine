@@ -9,7 +9,8 @@ from optparse import OptionParser
 
 from pip._vendor.appdirs import unicode
 
-import kavcore.k2engine
+from engine import kavcore
+from .kavcore import k2engine
 
 from ctypes import windll, Structure, c_short, c_ushort,  byref
 

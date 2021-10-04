@@ -10,9 +10,9 @@ import shutil
 import struct
 import sys
 import zlib
-import k2rc4
-import k2rsa
-import k2timelib
+from . import k2rc4
+from . import k2rsa
+from . import k2timelib
 
 '''
 ---------------------------------------------------------------------------

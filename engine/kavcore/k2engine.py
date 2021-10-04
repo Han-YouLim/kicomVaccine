@@ -8,11 +8,11 @@ import types
 import mmap
 import glob
 
-import k2timelib
-import k2kmdfile
-import k2rsa
-import k2file
-import k2const
+from . import k2timelib
+from . import k2kmdfile
+from . import k2rsa
+from . import k2file
+from . import k2const
 
 # ---------------------------------------------------------------------
 # 엔진 오류 메시지를 정의
