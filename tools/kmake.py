@@ -2,6 +2,8 @@
 
 import os
 import sys
+import k2kmdfile
+
 
 s = os.path.dirname(
     os.path.dirname(
@@ -11,7 +13,6 @@ s = os.path.dirname(
 
 sys.path.append(s)
 
-import k2kmdfile
 
 if __name__=='__main__':
     #인자값 체크

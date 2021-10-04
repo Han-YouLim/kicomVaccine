@@ -10,9 +10,9 @@ import shutil
 import struct
 import sys
 import zlib
-from . import k2rc4
-from . import k2rsa
-from . import k2timelib
+import k2rc4
+import k2rsa
+import k2timelib
 
 '''
 ---------------------------------------------------------------------------
@@ -322,11 +322,13 @@ def load(mod_name, buf):
         try:
             code = marshal.loads(buf[8:])  # pyc에서 파이썬 코드를 로딩한다.
             module = imp.new_module(mod_name)  # 새로운 모듈 생성한다.
+            print("mod_name",str(mod_name))
             exec (code, module.__dict__)  # pyc 파이썬 코드와 모듈을 연결한다.
             sys.modules[mod_name] = module  # 전역에서 사용가능하게 등록한다.
-
+            print("k2kmdfile, load:에러 없음") #load 함수 잘 실행되는지 확인
             return module
-        except:
+        except Exception as e:
+            print("에러: "+str(e))
             return None
     else:
         return None
