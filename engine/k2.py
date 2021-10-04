@@ -281,10 +281,6 @@ def update_callback(ret_file_info):
 # 입력값 : result - 악성코드 검사 결과
 # -------------------------------------------------------------------------
 def print_result(result):
-
-    print
-    print
-
     cprint('Results:\n', FOREGROUND_GREY | FOREGROUND_INTENSITY)
     cprint('Folders           :%d\n' % result['Folders'], FOREGROUND_GREY | FOREGROUND_INTENSITY)
     cprint('Files             :%d\n' % result['Files'], FOREGROUND_GREY | FOREGROUND_INTENSITY)
@@ -295,7 +291,7 @@ def print_result(result):
 
 
 def print_usage():
-    print('\nUsage: k2.py path[s[ [options]')
+    print('\nUsage: k2.py path[s] [options]')
 
 
 def parser_options():
