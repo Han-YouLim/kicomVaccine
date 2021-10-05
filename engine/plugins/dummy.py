@@ -30,6 +30,7 @@ class KavMain:
     #         filename_ex - 파일 이름 (압축 내부 파일 이름)
     def scan(self, filehandle, filename):
         try:
+            print("here is dummy.py scan fun")  # self debugging
             fp = open(filename)
             buf = fp.read(len(self.dummy_pattern))  # 패턴은 49 Byte 크기
             fp.close()
@@ -39,6 +40,7 @@ class KavMain:
                 # 악성코드 패턴이 갖다면 결과 값을 리턴한다.
                 return True, self.virus_name, 0
         except IOError:
+            print("here is dummy.py scan fun. and I have a error IOERROR")  # self debugging
             pass
 
         # 악성코드를 발견하지 못했음 (악성코드 발견 여부, 악성코드 이름, 악성코드 ID)

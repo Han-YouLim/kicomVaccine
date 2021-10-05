@@ -6,7 +6,6 @@
 import os
 import sys
 from optparse import OptionParser
-from engine import kavcore
 
 
 from ctypes import windll, Structure, c_short, c_ushort,  byref
@@ -14,6 +13,8 @@ from ctypes import windll, Structure, c_short, c_ushort,  byref
 # -------------------------------------------------------------------------
 # 주요 상수
 # -------------------------------------------------------------------------
+import kavcore.k2engine
+
 KAV_VERSION = '0.01'
 KAV_BUILDDATE = 'Sep 20 2021'
 KAV_LASTYEAR = KAV_BUILDDATE[len(KAV_BUILDDATE)-4:]
@@ -37,12 +38,10 @@ from ctypes import windll, Structure, c_short, c_ushort, byref
 SHORT = c_short
 WORD = c_ushort
 
-
 class Coord(Structure):
     _fields_ = [
     ("X", SHORT),
     ("Y", SHORT)]
-
 
 class SmallRect(Structure):
     _fields_ = [
@@ -50,7 +49,6 @@ class SmallRect(Structure):
         ("Top", SHORT),
         ("Right", SHORT),
         ("Bottom", SHORT)]
-
 
 class ConsoleScreenBufferInfo(Structure):
     _fields_ = [
@@ -74,10 +72,8 @@ def get_text_attr():
     GetConsoleScreenBufferInfo(stdout_handle, byref(csbi))
     return csbi.wAttributes
 
-
 def set_text_attr(color):
     SetConsoleTextAttribute(stdout_handle, color)
-
 
 def cprint(msg, color):
     default_colors = get_text_attr()
@@ -88,6 +84,11 @@ def cprint(msg, color):
     set_text_attr(default_colors)
 
     sys.stdout.flush()
+
+def print_error(msg):
+    cprint("Error: ", FOREGROUND_RED|FOREGROUND_INTENSITY)
+    print(msg)
+
 
 def convert_display_filename(real_filename):
     # 출력용 이름
@@ -158,9 +159,6 @@ def define_options():
     usage = "Usage: %prog path[s] [options]"
     parser = ModifiedOptionParser(add_help_option=False, usage=usage)
 
-    usage = "Usage: %prog path[s] [options]"
-    parser = ModifiedOptionParser(add_help_option=False, usage=usage)
-
     parser.add_option("-f", "--files",
                       action="store_true", dest="opt_files",
                       default=True)
@@ -177,17 +175,44 @@ def define_options():
                       action="store_true", dest="opt_help",
                       default=False)
 
-    # 숨겨진 기능 (인공지능 AI을 위해 만든 옵션)
-
-    parser.add_option("", "--feature",
-                      type="int", dest="opt_feature",
-                      default=0xffffffff)
-
     return parser
 
-# -------------------------------------------------------------------------
+def print_usage():
+    print('\nUsage: k2.py path[s] [options]')
+
+# 백신 옵션을 분석
+def parser_options():
+    parser = define_options()  # 백신 옵션 정의
+
+    if len(sys.argv) < 2:
+        return 'NONE_OPTION', None
+    else:
+        try:
+            (options, args) = parser.parse_args()
+            if len(args) == 0:
+                return options, None
+        except OptionParsingError as e:  # 잘못된 옵션 사용일 경우
+            return 'ILLEGAL_OPTION', e.msg
+        except OptionParsingExit as e:
+            return 'ILLEGAL_OPTION', e.msg
+
+        return options, args
+
+
+# print_options()
+# 백신의 옵션을 출력
+def print_options():
+    options_string = '''Options:
+        -f,  --files           scan files *
+        -r,  --arc             scan archives
+        -I,  --list            display all files
+        -V,  --vlist           display virus list
+        -?,  --help            this help
+                               * = default option'''
+
+    print(options_string)
+
 # scan의 콜백 함수
-# -------------------------------------------------------------------------
 def scan_callback(ret_value):
 
     fs = ret_value['file_struct']
@@ -214,7 +239,6 @@ def scan_callback(ret_value):
             cprint('Disinfect/Delete/Ignore/Quit? (d/l/i/q) : ', FOREGROUND_CYAN | FOREGROUND_INTENSITY)
             ch = getch().lower()
             print(ch)
-
             if ch == 'd':
                 return kavcore.k2const.K2_ACTION_DISINFECT
             elif ch == 'l':
@@ -227,28 +251,12 @@ def scan_callback(ret_value):
                 return kavcore.k2const.K2_ACTION_DISINFECT
             elif g_options.opt_del:  # 삭제 옵션
                 return kavcore.k2const.K2_ACTION_DELETE
-
             return kavcore.k2const.K2_ACTION_IGNORE
             '''
 
-# -------------------------------------------------------------------------
-# print_options()
-# 백신의 옵션을 출력한다
-# -------------------------------------------------------------------------
-def print_options():
-    options_string = '''Options:
-        -f,  --files           scan files *
-        -r,  --arc             scan archives
-        -I,  --list            display all files
-        -V,  --vlist           display virus list
-        -?,  --help            this help
-                               * = default option'''
 
-    print(options_string)
 
-# -------------------------------------------------------------------------
 # disinfect의 콜백 함수
-# -------------------------------------------------------------------------
 def disinfect_callback(ret_value, action_type):
     fs = ret_value['file_struct']
     message = ''
@@ -292,11 +300,9 @@ def update_callback(ret_file_info):
 
 
 
-# -------------------------------------------------------------------------
 # print_result(result)
 # 악성코드 검사 결과를 출력한다.
 # 입력값 : result - 악성코드 검사 결과
-# -------------------------------------------------------------------------
 def print_result(result):
 
     print
@@ -312,30 +318,11 @@ def print_result(result):
 
     print
 
-
-def print_usage():
-    print('\nUsage: k2.py path[s[ [options]')
-
-
-def parser_options():
-    parser = define_options()  # 백신 옵션 정의
-
-    if len(sys.argv) < 2:
-        return 'NONE_OPTION', None
-    else:
-        try:
-            (options, args) = parser.parse_args()
-            if len(args) == 0:
-                return options, None
-        except OptionParsingError as e:  # 잘못된 옵션 사용일 경우
-            # print 'ERROR'
-            return 'ILLEGAL_OPTION', e.msg
-        except OptionParsingExit as e:
-            return 'ILLEGAL_OPTION', e.msg
-
-        return options, args
-
-
+#listvirus의 콜백함수
+def listvirus_callback(plugin_name, vnames):
+    print ("in k2.py")
+    for vname in vnames:
+        print('%-50s [%s.kmd]'%(vname, plugin_name))
 
 # -------------------------------------------------------------------------
 # main()
@@ -360,6 +347,36 @@ def main():
         print_usage()
         print_options()
         return 0
+
+    #백신 엔진 구동
+    k2=kavcore.k2engine.Engine()
+    if not k2.set_plugins('plugins'):   #플러그인 엔진 설정
+        print_error('CloudBread AntiVirus Engine set_plugins')
+        return 0
+
+    kav=k2.create_instance()    #백신 엔진 인스턴스 생성
+    if not kav:
+        print_error('CloudBread AntiVirus Engine create_instance')
+        return 0
+
+    if not kav.init():
+        print_error('CloudBread AntiVirus Engine init')
+        return 0
+
+    if options.opt_vlist is True:   #악성코드 목록 출력
+        kav.listvirus(listvirus_callback)
+    else:
+        if args:
+            #검사용 path
+            for scan_path in args:
+                scan_path=os.path.abspath(scan_path)
+
+                if os.path.exists(scan_path):
+                    print(scan_path)
+                else:
+                    print_error('Invalid path: \'%s\''%scan_path)
+    kav.uninit()
+
 
 if __name__=='__main__':
     main()

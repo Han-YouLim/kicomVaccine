@@ -5,12 +5,15 @@ import re
 import glob
 import shutil
 import tempfile
-from ..plugins import kernel
+
 # import psutil
 
 # -------------------------------------------------------------------------
 # FileStruct 클래스
 # -------------------------------------------------------------------------
+from engine.plugins import kernel
+
+
 class FileStruct:
     # ---------------------------------------------------------------------
     # __init__(self, filename=None)

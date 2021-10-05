@@ -325,10 +325,10 @@ def load(mod_name, buf):
             print("mod_name",str(mod_name))
             exec (code, module.__dict__)  # pyc 파이썬 코드와 모듈을 연결한다.
             sys.modules[mod_name] = module  # 전역에서 사용가능하게 등록한다.
-            print("k2kmdfile, load:에러 없음") #load 함수 잘 실행되는지 확인
+            # print("k2kmdfile, load:에러 없음") #load 함수 잘 실행되는지 확인
             return module
         except Exception as e:
-            print("에러: "+str(e))
+            # print("에러: "+str(e))
             return None
     else:
         return None
