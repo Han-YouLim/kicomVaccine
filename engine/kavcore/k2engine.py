@@ -121,17 +121,14 @@ class EngineInstance:
     #         verbose      - 디버그 여부
     # ---------------------------------------------------------------------
 
-    def __init__(self, plugins_path, max_datetime, debug=False):
+    def __init__(self, debug=False):
         self.debug = debug  # 디버깅 여부
+        self.plugins_path = None  # 플러그인 경로
 
-        self.plugins_path = plugins_path  # 플러그인 경로
-        self.max_datetime = max_datetime  # 플러그 엔진의 가장 최신 시간 값
+        self.kmdfiles = []
+        self.kmd_modules = []
 
-        self.options = {}
-        self.set_options()
-
-        self.kavmain_inst = []  # 모든 플러그인의 KavMain 인스턴스
-
+        self.max_datetime = datetime.datetime(1980, 1, 1, 0, 0, 0, 0)
         self.result = {}
         self.identified_virus = set()
 
@@ -337,7 +334,7 @@ class EngineInstance:
                     self.result['Folders'] +=1
 
                     if self.options['opt_list']:  # 옵션 내용 중 모든 리스트 출력인가?
-                        if isinstance(cb_fn,types.FuctionType):
+                        if isinstance(cb_fn,types.FunctionType):
                             cb_fn(ret_value)
 
                     flist = glob.glob(real_name+os.sep+ '*')
