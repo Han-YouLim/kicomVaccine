@@ -121,13 +121,15 @@ class EngineInstance:
     #         verbose      - 디버그 여부
     # ---------------------------------------------------------------------
 
-    def __init__(self, debug=False):
+    def __init__(self, plugins_path, temp_path, max_datetime,debug=False):
         self.debug = debug  # 디버깅 여부
         self.plugins_path = None  # 플러그인 경로
 
         self.kmdfiles = []
         self.kmd_modules = []
-
+        self.options = {}  # 옵션
+        self.set_options()  # 기본 옵션 설정
+        self.kavmain_inst = []  # 모든 플러그인의 KaVMain 인스턴스
         self.max_datetime = datetime.datetime(1980, 1, 1, 0, 0, 0, 0)
         self.result = {}
         self.identified_virus = set()
