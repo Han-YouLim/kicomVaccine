@@ -283,7 +283,6 @@ def print_result(result):
     cprint('Results:\n', FOREGROUND_GREY | FOREGROUND_INTENSITY)
     cprint('Folders           :%d\n' % result['Folders'], FOREGROUND_GREY | FOREGROUND_INTENSITY)
     cprint('Files             :%d\n' % result['Files'], FOREGROUND_GREY | FOREGROUND_INTENSITY)
-    cprint('Packed            :%d\n' % result['Packed'], FOREGROUND_GREY | FOREGROUND_INTENSITY)
     cprint('Infected files    :%d\n' % result['Infected_files'], FOREGROUND_GREY | FOREGROUND_INTENSITY)
     cprint('Identified viruses:%d\n' % result['Identified_viruses'], FOREGROUND_GREY | FOREGROUND_INTENSITY)
     cprint('I/O errors        :%d\n' % result['IO_errors'], FOREGROUND_GREY | FOREGROUND_INTENSITY)
@@ -370,6 +369,7 @@ def main():
     else:
         if args:
             # 검사용 path 설정
+            kav.set_result()
             for scan_path in args: # 옵션을 제외한 첫번째가 검사대상
                 scan_path=os.path.abspath(scan_path)
 
@@ -379,6 +379,7 @@ def main():
                     print_error('Invalid path: \'%s\'' % scan_path)
             ret = kav.get_result()
             print_result(ret)
+
 
     kav.uninit()
 
