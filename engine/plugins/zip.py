@@ -1,14 +1,6 @@
 # -*- coding:utf-8 -*-
 
-import struct
-import zlib
-import os
-import shutil
-
 import zipfile
-
-
-
 
 # -------------------------------------------------------------------------
 # KavMain 클래스
@@ -55,7 +47,7 @@ class KavMain:
     #          filename_ex - 압축 파일 내부 파일 이름
     # 리턴값 : {파일 포맷 분석 정보} or None
     # ---------------------------------------------------------------------
-    def format(self, filehandle, filename, filename_ex):
+    def format(self, filehandle, filename):
         fileformat = {}
         mm = filehandle
         if mm[0:4] == 'PK\x03\x04':  # 헤더 체크
