@@ -105,15 +105,13 @@ class KavMain:
     def mkarc(self, arc_engine_id, arc_name, file_infos):
         if arc_engine_id == 'arc_zip':
             zfile = zipfile.ZipFile(arc_name, 'w')
-            # print '[-] zip :', arc_name
 
             for file_info in file_infos:
                 rname = file_info.get_filename()
                 try:
                     with open(rname, 'rb') as fp:
                         buf = fp.read()
-                        # print '[-] filename :', rname, len(buf)
-                        # print '[-] rname :',
+
                         a_name = file_info.get_filename_in_archive()
                         zfile.writestr(a_name, buf)
                 except IOError:

@@ -321,7 +321,7 @@ class EngineInstance:
 
         # 1. 검사 대상 리스트에 파일을 등록
         file_info = k2file.FileStruct(filename)
-        file_scan_list = [filename]
+        file_scan_list = [file_info]
 
         while len(file_scan_list):
             try:
