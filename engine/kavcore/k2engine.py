@@ -10,7 +10,7 @@ import k2kmdfile
 import k2rsa
 
 #Engine 클래스
-from engine.kavcore import k2file
+from engine.kavcore import k2file, k2const
 
 
 class Engine:
@@ -301,7 +301,9 @@ class EngineInstance:
     # ---------------------------------------------------------------------
     def scan(self, filename, *callback):
 
-        cb_fn = None
+        scan_callback_fn = None #악성코드 검사 콜백 함수
+        disinfect_callback_fn = None #악성코드 치료 콜백 함수
+        update_callback_fn = None #악성코드 압축 최종 치료 콜백 함수
 
         # 악성코드 검사 결과
         ret_value = {
@@ -312,12 +314,14 @@ class EngineInstance:
             'engine_id': -1  # 악성코드를 발견한 플러그인 엔진 ID
         }
 
-        argc = len(callback)
+        try:
+            scan_callback_fn = callback[0]
+            disinfect_callback_fn = callback[1]
+            update_callback_fn = callback[3]
+        except IndexError:
+            pass
 
-        if argc == 1: # callback 함수가 존재하는지 체크
-            cb_fn = callback[0]
-        elif argc > 1:
-            return -1
+        argc = len(callback)
 
         # 1. 검사 대상 리스트에 파일을 등록
         file_info = k2file.FileStruct(filename)
@@ -337,17 +341,17 @@ class EngineInstance:
                     # 콜백 호출 또는 검사 리턴값 생성
                     ret_value['result'] = False  # 폴더이므로 악성코드 없음
                     ret_value['filename'] = real_name  # 검사 파일 이름
+                    ret_value['file_struct'] = t_file_info
 
                     self.result['Folders'] += 1
 
                     if self.options['opt_list']:  # 옵션 내용 중 모든 리스트 출력인가?
 
-                        if isinstance(cb_fn,types.FunctionType): #콜백함수가 존재하는가?
-                            cb_fn(ret_value) #콜백 함수 호출
+                        if isinstance(scan_callback_fn, types.FunctionType): #콜백함수가 존재하는가?
+                            scan_callback_fn(ret_value) #콜백 함수 호출
 
                     flist = glob.glob(real_name+os.sep+ '*')
                     tmp_flist=[]
-                    file_scan_list = flist + file_scan_list
 
                     for rfname in flist:
                         tmp_info = k2file.FileStruct(rfname)
@@ -358,19 +362,20 @@ class EngineInstance:
 
                 # 검사 대상이 파일인가? 압축 해제 대상인가?
                 elif os.path.isfile(real_name) or t_file_info.is_archive():
-
                     self.result['Files'] += 1  # 파일 개수 카운트
+
                     ret = self.unarc(t_file_info) #압축된 파일이면 압축 해제
                     if ret:
                         t_file_info = ret
 
+                    #2. 포맷 분석
                     ff = self.format(t_file_info)
 
                     # 파일로 악성코드 검사
                     ret, vname, mid, eid = self.__scan_file(t_file_info, ff)
 
                     if ret:
-                        self.result['Infected_files'] +=1
+                        self.result['Infected_files'] += 1
                         self.identified_virus.update([vname])
 
                     ret_value['result'] = ret  # 악성코드 발견 여부
@@ -379,13 +384,21 @@ class EngineInstance:
                     ret_value['virus_id'] = mid  # 악성코드 ID
                     ret_value['filename'] = t_file_info  # 검사 파일 이름
 
-                    if self.options['opt_list']: #모두 리스트 출력인가?
-                        if isinstance(cb_fn, types.FunctionType):
-                                cb_fn(ret_value)
+                    if ret_value['result']: #악성 코드 발견인가?
+                        if isinstance(scan_callback_fn, types.FunctionType):
+                            action_type = scan_callback_fn(ret_value)
+
+                            if action_type == k2const.K2_ACTION_QUIT:
+                                return 0
+
+                            self.__disinfect_process(ret_value, disinfect_callback_fn, action_type)
                     else:
-                        if ret_value['result']:
-                            if isinstance(cb_fn, types.FunctionType):
-                                cb_fn(ret_value)
+                        if self.options['opt_list']:  # 옵션 내용 중 모든 리스트 출력인가?
+                            if isinstance(scan_callback_fn, types.FunctionType):
+                                scan_callback_fn(ret_value)
+
+                    self.__update_process(t_file_info, update_callback_fn)
+
 
                     #이미 해당 파일이 악성 코드라고 판명되었다면
                     #그 파일을 압축 해제해서 내부를 볼 필요 없다.
@@ -398,6 +411,9 @@ class EngineInstance:
 
             except KeyboardInterrupt:
                 return 1
+
+
+        self.__update_process(None, update_callback_fn, True)
         return 0
 
 
