@@ -5,7 +5,6 @@
 # -------------------------------------------------------------------------
 import os
 import sys
-from msvcrt import getch
 from optparse import OptionParser
 
 
@@ -93,6 +92,26 @@ def cprint(msg, color):
 def print_error(msg):
     cprint('Error: ', FOREGROUND_RED|FOREGROUND_INTENSITY)
     print(msg)
+
+def getch():
+    if os.name == 'nt':
+        import msvcrt
+
+        return msvcrt.getch()
+    else:
+        import tty
+        import termios
+
+        fd = sys.stdin.fileno()
+        old_settings = termios.tcgetattr(fd)
+
+        try:
+            tty.setraw(sys.stdin.fileno())
+            ch = sys.stdin.read(1)
+        finally:
+            termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+
+        return ch
 
 def convert_display_filename(real_filename):
     # 출력용 이름
