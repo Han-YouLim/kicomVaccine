@@ -10,6 +10,9 @@ import k2kmdfile
 import k2rsa
 
 #Engine 클래스
+from engine.kavcore import k2file
+
+
 class Engine:
     #클래스 초기화
     def __init__(self, debug=False):
@@ -317,47 +320,64 @@ class EngineInstance:
             return -1
 
         # 1. 검사 대상 리스트에 파일을 등록
+        file_info = k2file.FileStruct(filename)
         file_scan_list = [filename]
 
         while len(file_scan_list):
             try:
-                real_name = file_scan_list.pop(0)  # 검사 대상 파일 하나를 가짐
+                t_file_info = file_scan_list.pop(0) # 검사 대상 파일 하나를 가짐
+                real_name = t_file_info.get_filename()  #real_filename을 가져옴
 
                 # 폴더면 내부 파일리스트만 검사 대상 리스트에 등록
                 if os.path.isdir(real_name):
                     # 폴더 등을 처리할 때를 위해 뒤에 붇는 os.sep는 우선 제거
                     if real_name[-1] == os.sep:
-                        real_name=real_name[:-1]
+                        real_name = real_name[:-1]
 
                     # 콜백 호출 또는 검사 리턴값 생성
                     ret_value['result'] = False  # 폴더이므로 악성코드 없음
                     ret_value['filename'] = real_name  # 검사 파일 이름
 
-                    self.result['Folders'] +=1
+                    self.result['Folders'] += 1
 
                     if self.options['opt_list']:  # 옵션 내용 중 모든 리스트 출력인가?
-                        if isinstance(cb_fn,types.FunctionType):
-                            cb_fn(ret_value)
+
+                        if isinstance(cb_fn,types.FunctionType): #콜백함수가 존재하는가?
+                            cb_fn(ret_value) #콜백 함수 호출
 
                     flist = glob.glob(real_name+os.sep+ '*')
-
+                    tmp_flist=[]
                     file_scan_list = flist + file_scan_list
 
-                elif os.path.isfile(real_name) :  # 검사 대상이 파일인가? 압축 해제 대상인가?
+                    for rfname in flist:
+                        tmp_info = k2file.FileStruct(rfname)
+                        tmp_flist.append(tmp_info)
+
+                    file_scan_list = tmp_flist + file_scan_list #생성된 목록은 file_scan_list 맨 앞에 삽입
+
+
+                # 검사 대상이 파일인가? 압축 해제 대상인가?
+                elif os.path.isfile(real_name) or t_file_info.is_archive():
+
+                    self.result['Files'] += 1  # 파일 개수 카운트
+                    ret = self.unarc(t_file_info) #압축된 파일이면 압축 해제
+                    if ret:
+                        t_file_info = ret
+
+                    ff = self.format(t_file_info)
+
                     # 파일로 악성코드 검사
-                    ret, vname, mid, eid = self.__scan_file(real_name)
+                    ret, vname, mid, eid = self.__scan_file(t_file_info, ff)
 
                     if ret:
                         self.result['Infected_files'] +=1
                         self.identified_virus.update([vname])
 
-                    self.result['Folders'] += 1
-
                     ret_value['result'] = ret  # 악성코드 발견 여부
                     ret_value['engine_id'] = eid # 엔진 ID
                     ret_value['virus_name'] = vname  # 에러 메시지로 대체
                     ret_value['virus_id'] = mid  # 악성코드 ID
-                    ret_value['filename'] = real_name  # 검사 파일 이름
+                    ret_value['filename'] = t_file_info  # 검사 파일 이름
 
                     if self.options['opt_list']: #모두 리스트 출력인가?
                         if isinstance(cb_fn, types.FunctionType):
@@ -366,6 +386,16 @@ class EngineInstance:
                         if ret_value['result']:
                             if isinstance(cb_fn, types.FunctionType):
                                 cb_fn(ret_value)
+
+                    #이미 해당 파일이 악성 코드라고 판명되었다면
+                    #그 파일을 압축 해제해서 내부를 볼 필요 없다.
+                    #따라서 악성코드가 아닌 경우만 검사
+                    if not ret:
+                        #압축파일이면 검사 대상 리스트에 추가
+                        arc_file_list = self.arclist(t_file_info, ff)
+                        if len(arc_file_list):
+                            file_scan_list = arc_file_list + file_scan_list
+
             except KeyboardInterrupt:
                 return 1
         return 0
@@ -468,3 +498,125 @@ class EngineInstance:
             pass
 
         return False, '', -1, -1
+
+    # ---------------------------------------------------------------------
+    # unarc(self, file_struct)
+    # 플러그인 엔진에게 압축 해제를 요청한다.
+    # 입력값 : file_struct - 압축 해제 대상 파일 정보
+    # 리턴값 : 압축 해제된 파일 정보 or None
+    # ---------------------------------------------------------------------
+    def unarc(self, file_struct):
+        rname_struct = None
+
+        try:
+            if file_struct.is_archive():  # 압축인가?
+                arc_engine_id = file_struct.get_archive_engine_name()  # 엔진 ID
+                arc_name = file_struct.get_archive_filename()
+                name_in_arc = file_struct.get_filename_in_archive()
+
+                # 압축 엔진 모듈의 unarc 멤버 함수 호출
+                for inst in self.kavmain_inst:
+                    try:
+                        unpack_data = inst.unarc(arc_engine_id, arc_name, name_in_arc)
+
+                        if unpack_data:
+                            # 압축을 해제하여 임시 파일을 생성
+                            rname = self.temp_path.mktemp()
+                            fp = open(rname, 'wb')
+                            fp.write(unpack_data)
+                            fp.close()
+
+                            rname_struct = file_struct
+                            rname_struct.set_filename(rname)
+                            break
+                    except AttributeError:
+                        continue
+
+                return rname_struct
+        except IOError:
+            pass
+
+        return None
+
+    # ---------------------------------------------------------------------
+    # arclist(self, file_struct, fileformat)
+    # 플러그인 엔진에게 압축 파일의 내부 리스트를 요청한다.
+    # 입력값 : file_struct - 압축 해제 대상 파일 정보
+    #         format      - 미리 분석한 파일 포맷 분석 정보
+    # 리턴값 : [압축 파일 내부 리스트] or []
+    # ---------------------------------------------------------------------
+    def arclist(self, file_struct, fileformat):
+        arc_list = [] #압축파일 목록
+        file_scan_list = []  # 검사 대상 정보를 모두 가짐 (k2file.FileStruct)
+
+        rname = file_struct.get_filename()
+        deep_name = file_struct.get_additional_filename()
+        mname = file_struct.get_master_filename()
+        level = file_struct.get_level()
+
+        # 압축 엔진 모듈의 arclist 멤버 함수 호출
+        for inst in self.kavmain_inst:
+            try:
+                if self.options['opt_arc']:
+                    arc_list = inst.arclist(rname, fileformat)
+
+                if len(arc_list):
+                    for alist in arc_list:
+                        arc_id = alist[0]
+                        name = alist[1]
+
+                        if len(deep_name):
+                            dname = dname = '%s/%s' % (deep_name, name)
+                        else:
+                            dname = '%s' % name
+
+                        fs = k2file.FileStruct()
+                        fs.set_archive(arc_id, rname, name, dname, mname, False, False, level + 1)
+                        file_scan_list.append(fs)
+
+                    self.result['Packed'] += 1
+
+                    break
+            except AttributeError:
+                continue
+
+        return file_scan_list
+
+    # ---------------------------------------------------------------------
+    # format(self, file_struct)
+    # 플러그인 엔진에게 파일 포맷 분석을 요청한다.
+    # 입력값 : file_struct - 압축 해제 대상 파일 정보
+    # 리턴값 : {파일 포맷 분석 정보} or {}
+    # ---------------------------------------------------------------------
+    def format(self, file_struct):
+        ret = {}
+        filename = file_struct.get_filename()
+
+        fp = None
+        mm = None
+
+        try:
+            fp = open(filename, 'rb')
+            mm = mmap.mmap(fp.fileno(), 0, access=mmap.ACCESS_READ)
+
+            # 엔진 모듈의 format 멤버 함수 호출
+            for inst in self.kavmain_inst:
+                try:
+                    ff = inst.format(mm, filename)
+                    if ff:
+                        ret.update(ff)
+                except AttributeError:
+                    pass
+
+            mm.close()
+            fp.close()
+        except IOError:
+            pass
+
+
+        return ret
+
+
+
+
+
