@@ -5,6 +5,7 @@
 # -------------------------------------------------------------------------
 import os
 import sys
+from msvcrt import getch
 from optparse import OptionParser
 
 
@@ -14,6 +15,7 @@ from ctypes import windll, Structure, c_short, c_ushort,  byref
 # 주요 상수
 # -------------------------------------------------------------------------
 import kavcore.k2engine
+from engine.plugins import kernel
 
 KAV_VERSION = '0.01'
 KAV_BUILDDATE = 'Sep 20 2021'
@@ -189,6 +191,7 @@ def define_options():
 # scan의 콜백 함수
 # -------------------------------------------------------------------------
 def scan_callback(ret_value):
+    global g_options
     fs = ret_value['file_struct']
 
     if len(fs.get_additional_filename()) != 0:
@@ -207,6 +210,30 @@ def scan_callback(ret_value):
         message_color = FOREGROUND_GREY | FOREGROUND_INTENSITY
 
     display_line(disp_name, message, message_color)
+
+    if g_options.opt_prompt:
+        while True and ret_value['result']:
+            cprint('Disinfect/Delete/Ignore/Quit? (d/l/i/q) : ', FOREGROUND_CYAN, FOREGROUND_INTENSITY)
+            ch = getch().lower()
+            print(ch)
+
+            if ch == 'd':
+                return kavcore.k2const.K2_ACTION_DISINFECT
+            elif ch == 'l':
+                return kavcore.k2const.K2_ACTION_DELETE
+            elif ch == 'i':
+                return kavcore.k2const.K2_ACTION_IGNORE
+            elif ch == 'q':
+                return kavcore.k2const.K2_ACTION_QUIT
+    elif g_options.opt_dis:  # 치료 옵션
+        return kavcore.k2const.K2_ACTION_DISINFECT
+    elif g_options.opt_del:  # 삭제 옵션
+        return kavcore.k2const.K2_ACTION_DELETE
+
+    return kavcore.k2const.K2_ACTION_IGNORE
+
+
+
 
 
 # -------------------------------------------------------------------------
