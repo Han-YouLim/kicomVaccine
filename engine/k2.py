@@ -194,11 +194,60 @@ def define_options():
     parser.add_option("-r", "--arc",
                       action="store_true", dest="opt_arc",
                       default=False)
+    parser.add_option("-G",
+                      action="store_true", dest="opt_log",
+                      default=False)
+    parser.add_option("", "--log",
+                      metavar="FILE", dest="log_filename")
     parser.add_option("-I", "--list",
                       action="store_true", dest="opt_list",
                       default=False)
+    parser.add_option("-e", "--app",
+                      action="store_true", dest="opt_app",
+                      default=False)
+    parser.add_option("-F", "--infp",
+                      metavar="PATH", dest="infp_path")
+    parser.add_option("", "--qname",  # 격리시 악성코드 이름 부여
+                      action="store_true", dest="opt_qname",
+                      default=False)
+    parser.add_option("", "--qhash",  # 격리시 Sha256 이름 부여
+                      action="store_true", dest="opt_qhash",
+                      default=False)
+    parser.add_option("-R", "--nor",
+                      action="store_true", dest="opt_nor",
+                      default=False)
     parser.add_option("-V", "--vlist",
                       action="store_true", dest="opt_vlist",
+                      default=False)
+    parser.add_option("-p", "--prompt",
+                      action="store_true", dest="opt_prompt",
+                      default=False)
+    parser.add_option("-d", "--dis",
+                      action="store_true", dest="opt_dis",
+                      default=False)
+    parser.add_option("-l", "--del",
+                      action="store_true", dest="opt_del",
+                      default=False)
+    parser.add_option("", "--no-color",
+                      action="store_true", dest="opt_nocolor",
+                      default=False)
+    parser.add_option("", "--move",
+                      action="store_true", dest="opt_move",
+                      default=False)
+    parser.add_option("", "--copy",
+                      action="store_true", dest="opt_copy",
+                      default=False)
+    parser.add_option("", "--update",
+                      action="store_true", dest="opt_update",
+                      default=False)
+    parser.add_option("", "--verbose",
+                      action="store_true", dest="opt_verbose",
+                      default=False)
+    parser.add_option("", "--sigtool",
+                      action="store_true", dest="opt_sigtool",
+                      default=False)
+    parser.add_option("", "--debug",
+                      action="store_true", dest="opt_debug",
                       default=False)
     parser.add_option("-?", "--help",
                       action="store_true", dest="opt_help",
@@ -211,7 +260,6 @@ def define_options():
                       default=0xffffffff)
 
     return parser
-
 # -------------------------------------------------------------------------
 # scan의 콜백 함수
 # -------------------------------------------------------------------------
@@ -274,6 +322,10 @@ def print_options():
         -r,  --arc             scan archives
         -I,  --list            display all files
         -V,  --vlist           display virus list
+        -p,  --prompt          prompt for action
+        -d,  --dis             disinfect files
+        -l,  --del             delete infected files
+             --no-color        don't print with color
         -?,  --help            this help
                                * = default option'''
 
@@ -339,7 +391,7 @@ def print_result(result):
     cprint('Results:\n', FOREGROUND_GREY | FOREGROUND_INTENSITY)
     cprint('Folders           :%d\n' % result['Folders'], FOREGROUND_GREY | FOREGROUND_INTENSITY)
     cprint('Files             :%d\n' % result['Files'], FOREGROUND_GREY | FOREGROUND_INTENSITY)
-    cprint('Packed            :%d\n' % result['Packed'], FOREGROUND_GREY | FOREGROUND_INTENSITY)
+    #cprint('Packed            :%d\n' % result['Packed'], FOREGROUND_GREY | FOREGROUND_INTENSITY)
     cprint('Infected files    :%d\n' % result['Infected_files'], FOREGROUND_GREY | FOREGROUND_INTENSITY)
     cprint('Identified viruses:%d\n' % result['Identified_viruses'], FOREGROUND_GREY | FOREGROUND_INTENSITY)
     cprint('I/O errors        :%d\n' % result['IO_errors'], FOREGROUND_GREY | FOREGROUND_INTENSITY)
