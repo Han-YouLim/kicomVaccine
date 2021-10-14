@@ -664,7 +664,8 @@ class EngineInstance:
                             rname_struct = file_struct
                             rname_struct.set_filename(rname)
                             break
-                    except AttributeError:
+                    except Exception as e:
+                        print (str(e))
                         continue
 
                 return rname_struct
@@ -701,7 +702,7 @@ class EngineInstance:
                         name = alist[1]
 
                         if len(deep_name):
-                            dname = dname = '%s/%s' % (deep_name, name)
+                            dname = '%s/%s' % (deep_name, name)
                         else:
                             dname = '%s' % name
 
