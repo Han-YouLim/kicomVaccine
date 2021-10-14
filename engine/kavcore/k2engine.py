@@ -527,7 +527,6 @@ class EngineInstance:
             for i, inst in enumerate(self.kavmain_inst):
                 try:
                     ret, vname, mid= inst.scan(mm, filename)
-                    scan_state = True
                     if ret:  # 악성코드 발견하면 추가 악성코드 검사를 중단한다.
                         eid = i  # 악성코드를 발견한 플러그인 엔진 ID
 
@@ -641,37 +640,33 @@ class EngineInstance:
     # 리턴값 : 압축 해제된 파일 정보 or None
     # ---------------------------------------------------------------------
     def unarc(self, file_struct):
-        rname_struct = None
+        rname_struct=None
 
         try:
-            if file_struct.is_archive():  # 압축인가?
-                arc_engine_id = file_struct.get_archive_engine_name()  # 엔진 ID
-                arc_name = file_struct.get_archive_filename()
-                name_in_arc = file_struct.get_filename_in_archive()
+            if file_struct.is_archive():
+                arc_engine_id=file_struct.get_archive_engine_name()
 
-                # 압축 엔진 모듈의 unarc 멤버 함수 호출
+                arc_name=file_struct.get_archive_filename()
+                name_in_arc=file_struct.get_filename_in_archive()
+
                 for inst in self.kavmain_inst:
                     try:
-                        unpack_data = inst.unarc(arc_engine_id, arc_name, name_in_arc)
+                        unpack_data=inst.unarc(arc_engine_id, arc_name, name_in_arc)
 
                         if unpack_data:
-                            # 압축을 해제하여 임시 파일을 생성
-                            rname = self.temp_path.mktemp()
-                            fp = open(rname, 'wb')
+                            rname=tempfile.mktemp(prefix='ktmp')
+                            fp=open(rname, 'wb')
                             fp.write(unpack_data)
                             fp.close()
 
-                            rname_struct = file_struct
+                            rname_struct=file_struct
                             rname_struct.set_filename(rname)
-                            break
-                    except Exception as e:
-                        print (str(e))
-                        continue
 
+                    except AttributeError:
+                        continue
                 return rname_struct
         except IOError:
             pass
-
         return None
 
     # ---------------------------------------------------------------------
@@ -682,42 +677,40 @@ class EngineInstance:
     # 리턴값 : [압축 파일 내부 리스트] or []
     # ---------------------------------------------------------------------
     def arclist(self, file_struct, fileformat):
-        arc_list = [] #압축파일 목록
-        file_scan_list = []  # 검사 대상 정보를 모두 가짐 (k2file.FileStruct)
+        arc_list = []
+        file_scan_list = []
 
         rname = file_struct.get_filename()
         deep_name = file_struct.get_additional_filename()
         mname = file_struct.get_master_filename()
         level = file_struct.get_level()
 
-        # 압축 엔진 모듈의 arclist 멤버 함수 호출
         for inst in self.kavmain_inst:
             try:
                 if self.options['opt_arc']:
                     arc_list = inst.arclist(rname, fileformat)
 
-                if len(arc_list):
+                if len(arc_list):  # 압축 목록이 존재한다면 추가하고 종료
                     for alist in arc_list:
-                        arc_id = alist[0]
-                        name = alist[1]
+                        arc_id = alist[0]  # 항상 압축 엔진 ID가 들어옴
+                        name = alist[1]  # 압축 파일의 내부 파일 이름
 
-                        if len(deep_name):
+                        if len(deep_name):  # 압축 파일 내부 표시용
                             dname = '%s/%s' % (deep_name, name)
                         else:
                             dname = '%s' % name
 
                         fs = k2file.FileStruct()
+                        # 기존 level보다 1증가시켜 압축 깊이가 깊어짐을 표시
                         fs.set_archive(arc_id, rname, name, dname, mname, False, False, level + 1)
                         file_scan_list.append(fs)
 
                     self.result['Packed'] += 1
-
                     break
             except AttributeError:
                 continue
 
         return file_scan_list
-
     # ---------------------------------------------------------------------
     # format(self, file_struct)
     # 플러그인 엔진에게 파일 포맷 분석을 요청한다.
@@ -727,9 +720,6 @@ class EngineInstance:
     def format(self, file_struct):
         ret = {}
         filename = file_struct.get_filename()
-
-        fp = None
-        mm = None
 
         try:
             fp = open(filename, 'rb')
@@ -743,16 +733,15 @@ class EngineInstance:
                         ret.update(ff)
                 except AttributeError:
                     pass
-
             mm.close()
             fp.close()
         except IOError:
             pass
 
-
         return ret
 
-    def __update_arc_file_struct(self, p_file_info):
+
+def __update_arc_file_struct(self, p_file_info):
         # 실제 압축 파일 이름이 같은 파일을 모두 추출한다.
         t = []
 
