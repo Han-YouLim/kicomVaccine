@@ -187,8 +187,7 @@ class EngineInstance:
 
                     if self.debug:
                         print ('    [-] %s.uninit() : %d' % (inst.__module__, ret))
-            except Exception as e:
-                print("*****"+str(e))
+            except AttributeError:
                 continue
 
         self.kavmain_inst = t_kavmain_inst # 최종 kavmain 인스턴스 등록
@@ -664,7 +663,6 @@ class EngineInstance:
             try:
                 if self.options['opt_arc']:
                     arc_list = inst.arclist(rname, fileformat)
-                print(arc_list)
                 if len(arc_list):  # 압축 목록이 존재한다면 추가하고 종료
                     for alist in arc_list:
                         arc_id = alist[0]  # 항상 압축 엔진 ID가 들어옴
