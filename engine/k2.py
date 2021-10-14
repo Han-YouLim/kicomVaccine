@@ -14,7 +14,13 @@ from ctypes import windll, Structure, c_short, c_ushort,  byref
 # 주요 상수
 # -------------------------------------------------------------------------
 import kavcore.k2engine
-from engine.plugins import kernel
+
+g_options = None  # 옵션
+g_delta_time = None  # 검사 시간
+display_scan_result = {'Prev': {}, 'Next': {}}  # 중복 출력을 막기 위한 구조체
+display_update_result = ''  # 압축 결과를 출력하기 위한 구조체
+
+PLUGIN_ERROR = False  # 플러인 엔진 로딩 실패 시 출력을 예쁘게 하기 위해 사용한 변수
 
 KAV_VERSION = '0.01'
 KAV_BUILDDATE = 'Sep 20 2021'
@@ -188,11 +194,60 @@ def define_options():
     parser.add_option("-r", "--arc",
                       action="store_true", dest="opt_arc",
                       default=False)
+    parser.add_option("-G",
+                      action="store_true", dest="opt_log",
+                      default=False)
+    parser.add_option("", "--log",
+                      metavar="FILE", dest="log_filename")
     parser.add_option("-I", "--list",
                       action="store_true", dest="opt_list",
                       default=False)
+    parser.add_option("-e", "--app",
+                      action="store_true", dest="opt_app",
+                      default=False)
+    parser.add_option("-F", "--infp",
+                      metavar="PATH", dest="infp_path")
+    parser.add_option("", "--qname",  # 격리시 악성코드 이름 부여
+                      action="store_true", dest="opt_qname",
+                      default=False)
+    parser.add_option("", "--qhash",  # 격리시 Sha256 이름 부여
+                      action="store_true", dest="opt_qhash",
+                      default=False)
+    parser.add_option("-R", "--nor",
+                      action="store_true", dest="opt_nor",
+                      default=False)
     parser.add_option("-V", "--vlist",
                       action="store_true", dest="opt_vlist",
+                      default=False)
+    parser.add_option("-p", "--prompt",
+                      action="store_true", dest="opt_prompt",
+                      default=False)
+    parser.add_option("-d", "--dis",
+                      action="store_true", dest="opt_dis",
+                      default=False)
+    parser.add_option("-l", "--del",
+                      action="store_true", dest="opt_del",
+                      default=False)
+    parser.add_option("", "--no-color",
+                      action="store_true", dest="opt_nocolor",
+                      default=False)
+    parser.add_option("", "--move",
+                      action="store_true", dest="opt_move",
+                      default=False)
+    parser.add_option("", "--copy",
+                      action="store_true", dest="opt_copy",
+                      default=False)
+    parser.add_option("", "--update",
+                      action="store_true", dest="opt_update",
+                      default=False)
+    parser.add_option("", "--verbose",
+                      action="store_true", dest="opt_verbose",
+                      default=False)
+    parser.add_option("", "--sigtool",
+                      action="store_true", dest="opt_sigtool",
+                      default=False)
+    parser.add_option("", "--debug",
+                      action="store_true", dest="opt_debug",
                       default=False)
     parser.add_option("-?", "--help",
                       action="store_true", dest="opt_help",
@@ -205,12 +260,14 @@ def define_options():
                       default=0xffffffff)
 
     return parser
-
 # -------------------------------------------------------------------------
 # scan의 콜백 함수
 # -------------------------------------------------------------------------
 def scan_callback(ret_value):
+
     global g_options
+    global display_scan_result  # 출력을 잠시 보류하는 구조체
+
     fs = ret_value['file_struct']
 
     if len(fs.get_additional_filename()) != 0:
@@ -265,6 +322,10 @@ def print_options():
         -r,  --arc             scan archives
         -I,  --list            display all files
         -V,  --vlist           display virus list
+        -p,  --prompt          prompt for action
+        -d,  --dis             disinfect files
+        -l,  --del             delete infected files
+             --no-color        don't print with color
         -?,  --help            this help
                                * = default option'''
 
@@ -307,10 +368,8 @@ def update_callback(ret_file_info):
     if ret_file_info.is_modify():  # 수정되었다면 결과 출력
         disp_name = ret_file_info.get_filename()
 
-
         message = 'updated'
         message_color = FOREGROUND_GREEN | FOREGROUND_INTENSITY
-
 
         display_line(disp_name, message, message_color)
 
@@ -332,16 +391,13 @@ def print_result(result):
     cprint('Results:\n', FOREGROUND_GREY | FOREGROUND_INTENSITY)
     cprint('Folders           :%d\n' % result['Folders'], FOREGROUND_GREY | FOREGROUND_INTENSITY)
     cprint('Files             :%d\n' % result['Files'], FOREGROUND_GREY | FOREGROUND_INTENSITY)
-    cprint('Packed            :%d\n' % result['Packed'], FOREGROUND_GREY | FOREGROUND_INTENSITY)
+    #cprint('Packed            :%d\n' % result['Packed'], FOREGROUND_GREY | FOREGROUND_INTENSITY)
     cprint('Infected files    :%d\n' % result['Infected_files'], FOREGROUND_GREY | FOREGROUND_INTENSITY)
     cprint('Identified viruses:%d\n' % result['Identified_viruses'], FOREGROUND_GREY | FOREGROUND_INTENSITY)
     cprint('I/O errors        :%d\n' % result['IO_errors'], FOREGROUND_GREY | FOREGROUND_INTENSITY)
 
-
-
 def print_usage():
     print('\nUsage: k2.py path[s] [options]')
-
 
 def parser_options():
     parser = define_options()  # 백신 옵션 정의
@@ -365,10 +421,10 @@ def parser_options():
 # main()
 # -------------------------------------------------------------------------
 def main():
-
+    global g_options
     options, args = parser_options()
+    g_options = options  # 글로벌 options 셋팅
     print_k2logo()
-
     # 잘못된 옵션인가?
     if options == 'NONE_OPTION':  # 옵션이 없는 경우
         print_usage()
@@ -389,14 +445,13 @@ def main():
     k2 = kavcore.k2engine.Engine()
 
     if not k2.set_plugins('plugins'): # 플로그인 엔진 설정
-        print print_error('cloudbread Anti-Virus Engine set_plugins')
+        print("cloudbread Anti-Virus Engine set_plugins")
         return 0
 
     kav = k2.create_instance() # 백신 엔진 인스턴스 생성
 
     if not kav:
-        print
-        print print_error('cloudbread Anti-Virus Engine create_instance')
+        print("cloudbread Anti-Virus Engine create_instance")
 
     if not kav.init(): #  전체 플러그인 엔진 초기화화
         print

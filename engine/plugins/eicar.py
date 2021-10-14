@@ -40,7 +40,7 @@ class KavMain:
 
                 # 파일에서 얻은 해시 값과 EICAR Test 악성코드의 해시 값이 일치하는가?
                 if fmd5 == '44d88612fea8a8f36de82e1278abb02f':
-                    return True, 'EICAR-Test-File (not a virus)', 0
+                    return True, 'EICAR-Test-File (not a virus)', 0 #ret, vname, mid
         except IOError:
             pass
 
