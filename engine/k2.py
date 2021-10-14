@@ -16,11 +16,6 @@ from ctypes import windll, Structure, c_short, c_ushort,  byref
 import kavcore.k2engine
 
 g_options = None  # 옵션
-g_delta_time = None  # 검사 시간
-display_scan_result = {'Prev': {}, 'Next': {}}  # 중복 출력을 막기 위한 구조체
-display_update_result = ''  # 압축 결과를 출력하기 위한 구조체
-
-PLUGIN_ERROR = False  # 플러인 엔진 로딩 실패 시 출력을 예쁘게 하기 위해 사용한 변수
 
 KAV_VERSION = '0.01'
 KAV_BUILDDATE = 'Sep 20 2021'
