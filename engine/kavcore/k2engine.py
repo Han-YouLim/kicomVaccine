@@ -32,6 +32,7 @@ class Engine:
 
         #공개키 로딩
         pu = k2rsa.read_key(os.path.join(plugins_path, 'key.pkr'))
+
         if not pu:
             return False
 
@@ -46,7 +47,7 @@ class Engine:
 
         # 우선순위대로 KMD 파일을 로딩한다.
         for kmd_name in self.kmdfiles:
-            kmd_path = plugins_path+os.sep+kmd_name
+            kmd_path = os.path.join(plugins_path, kmd_name) #'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
             k=k2kmdfile.KMD(kmd_path, pu)   #모든 kmd 파일을 복호화
             module=k2kmdfile.load(kmd_name.split('.')[0], k.body)
 
@@ -124,10 +125,9 @@ class EngineInstance:
     #         max_datetime - 플러그인 엔진의 최신 시간 값
     #         verbose      - 디버그 여부
     # ---------------------------------------------------------------------
-
     def __init__(self, plugins_path, temp_path, max_datetime,debug=False):
         self.debug = debug  # 디버깅 여부
-        self.plugins_path = None  # 플러그인 경로
+        self.plugins_path = plugins_path  # 플러그인 경로  #''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
         self.kmdfiles = []
         self.kmd_modules = []
@@ -136,48 +136,29 @@ class EngineInstance:
         self.kavmain_inst = []  # 모든 플러그인의 KaVMain 인스턴스
 
         self.update_info = []  # 압축 파일 최종 치료를 위한 압축 리스트
-
-        self.max_datetime = datetime.datetime(1980, 1, 1, 0, 0, 0, 0)
         self.result = {}
+        self.max_datetime = datetime.datetime(1980, 1, 1, 0, 0, 0, 0)
         self.identified_virus = set()
         self.set_result()  # 악성코드 검사 결과를 초기화한다.
 
     def set_options(self,options=None):
         if options:
             self.options['opt_arc'] = options.opt_arc
-            self.options['opt_nor'] = options.opt_nor
             self.options['opt_list'] = options.opt_list
-            self.options['opt_move'] = options.opt_move
-            self.options['opt_copy'] = options.opt_copy
-            self.options['opt_dis'] = options.opt_dis
-            self.options['infp_path'] = options.infp_path
-            self.options['opt_verbose'] = options.opt_verbose
-            self.options['opt_sigtool'] = options.opt_sigtool
-            self.options['opt_debug'] = options.opt_debug
-            self.options['opt_feature'] = options.opt_feature
-            self.options['opt_qname'] = options.opt_qname
-            self.options['opt_qhash'] = options.opt_qhash
         else:  # 기본값 설정
             self.options['opt_arc'] = False
-            self.options['opt_nor'] = False
             self.options['opt_list'] = False
-            self.options['opt_move'] = False
-            self.options['opt_copy'] = False
-            self.options['opt_dis'] = False
-            self.options['infp_path'] = None
-            self.options['opt_verbose'] = False
-            self.options['opt_sigtool'] = False
-            self.options['opt_debug'] = False
-            self.options['opt_feature'] = 0xffffffff
-            self.options['opt_qname'] = False
-            self.options['opt_qhash'] = False
+
         return True
 
     def set_result(self):
         self.result['Folders'] = 0
         self.result['Files'] = 0
+        self.result['Packed'] = 0
         self.result['Infected_files'] = 0
         self.result['Identified_viruses'] = 0
+        self.result['Disinfected_files'] = 0  # 치료한 파일 수
+        self.result['Deleted_files'] = 0  # 삭제한 파일 수
         self.result['IO_errors'] = 0
 
     def get_result(self):
@@ -240,7 +221,6 @@ class EngineInstance:
     # uninit(self)
     # 플러그인 엔진 전체를 종료한다.
     # ---------------------------------------------------------------------
-
     def uninit(self):
         if self.debug:
             print ('[*] KavMain.uninit() :')
@@ -348,11 +328,9 @@ class EngineInstance:
         try:
             scan_callback_fn = callback[0]
             disinfect_callback_fn = callback[1]
-            update_callback_fn = callback[3]
+            update_callback_fn = callback[2] #/////////////////////////////////////////////////////////////////////////////
         except IndexError:
             pass
-
-        argc = len(callback)
 
         # 1. 검사 대상 리스트에 파일을 등록
         file_info = k2file.FileStruct(filename)
@@ -377,10 +355,8 @@ class EngineInstance:
                     self.result['Folders'] += 1
 
                     if self.options['opt_list']:  # 옵션 내용 중 모든 리스트 출력인가?
-
                         if isinstance(scan_callback_fn, types.FunctionType): #콜백함수가 존재하는가?
                             scan_callback_fn(ret_value) #콜백 함수 호출
-
                     flist = glob.glob(real_name+os.sep+ '*')
                     tmp_flist=[]
 
@@ -427,6 +403,10 @@ class EngineInstance:
                         if self.options['opt_list']:  # 옵션 내용 중 모든 리스트 출력인가?
                             if isinstance(scan_callback_fn, types.FunctionType):
                                 scan_callback_fn(ret_value)
+                            # else:  # 아니면 악성코드인 것만 출력
+                            #     if ret_value['result']:
+                            #         if isinstance(cb_fn, types.FunctionType):
+                            #             scan_callback_fn(ret_value)
 
                     self.__update_process(t_file_info, update_callback_fn)
 
@@ -445,6 +425,7 @@ class EngineInstance:
 
 
         self.__update_process(None, update_callback_fn, True)
+
         return 0
 
 
@@ -547,12 +528,6 @@ class EngineInstance:
         except IOError:
             pass
 
-        if mm:
-            mm.close()
-
-        if fp:
-            fp.close()
-
         return False, '', -1, -1
     # ---------------------------------------------------------------------
     # __disinfect_process(self, ret_value, action_type)
@@ -589,8 +564,7 @@ class EngineInstance:
         if isinstance(disinfect_callback_fn, types.FunctionType):
             disinfect_callback_fn(ret_value, action_type)
 
-        return d_ret
-
+        return d_ret   #//
     # ---------------------------------------------------------------------
     # __update_process(self, file_struct, immediately_flag=False)
     # update_info를 갱신한다.
@@ -740,8 +714,7 @@ class EngineInstance:
 
         return ret
 
-
-def __update_arc_file_struct(self, p_file_info):
+    def __update_arc_file_struct(self, p_file_info):
         # 실제 압축 파일 이름이 같은 파일을 모두 추출한다.
         t = []
 
@@ -786,6 +759,4 @@ def __update_arc_file_struct(self, p_file_info):
                     os.remove(t_fname)
 
             return ret_file_info
-
-
 
