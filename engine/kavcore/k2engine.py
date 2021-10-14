@@ -182,12 +182,13 @@ class EngineInstance:
             try:
                 # 플러그인 엔진의 init 함수 호출
                 ret = inst.init(self.plugins_path)
-                if not ret : # 성공
+                if not ret:
                     t_kavmain_inst.append(inst) # 임시 최종 인스턴스로 등록
 
                     if self.debug:
                         print ('    [-] %s.uninit() : %d' % (inst.__module__, ret))
-            except AttributeError:
+            except Exception as e:
+                print("*****"+str(e))
                 continue
 
         self.kavmain_inst = t_kavmain_inst # 최종 kavmain 인스턴스 등록
@@ -663,7 +664,7 @@ class EngineInstance:
             try:
                 if self.options['opt_arc']:
                     arc_list = inst.arclist(rname, fileformat)
-
+                print(arc_list)
                 if len(arc_list):  # 압축 목록이 존재한다면 추가하고 종료
                     for alist in arc_list:
                         arc_id = alist[0]  # 항상 압축 엔진 ID가 들어옴
@@ -728,10 +729,10 @@ class EngineInstance:
 
         t.reverse()  # 순위를 바꾼다.
 
-        # 리턴 값이 될 파일 정보(압축 파일의 최상위 파일)
+        # 리턴값이 될 파일 정보 (압축 파일의 최상위 파일)
         ret_file_info = self.update_info.pop()
 
-        # 업데이트 대상 파일들이 수정 여부를 체크한다.
+        # 업데이트 대상 파일들이 수정 여부를 체크한다
         b_update = False
 
         for finfo in t:
@@ -750,13 +751,13 @@ class EngineInstance:
                         break
                 except AttributeError:
                     continue
-                ret_file_info.set_modify(True)  # 수정 여부 표시
-            # 압축된 파일들 모두 삭제
-            for tmp in t:
-                t_fname = tmp.get_filename()
-                # 플러그인 엔진에 의해 파일이 치료(삭제)되었을 수 있음
-                if os.path.exists(t_fname):
-                    os.remove(t_fname)
+            ret_file_info.set_modify(True)  # 수정 여부 표시
 
-            return ret_file_info
+        # 압축된 파일들 모두 삭제
+        for tmp in t:
+            t_fname = tmp.get_filename()
+            # 플러그인 엔진에 의해 파일이 치료(삭제)됐을 수 있다
+            if os.path.exists(t_fname):
+                os.remove(t_fname)
 
+        return ret_file_info

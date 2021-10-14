@@ -71,13 +71,11 @@ class KavMain:
         # 미리 분석된 파일 포맷중에 ZIP 포맷이 있는가?
         if 'ff_zip' in fileformat:
             zfile = zipfile.ZipFile(filename)
-
             for name in zfile.namelist():
                 file_scan_list.append(['arc_zip', name])
             zfile.close()
 
         return file_scan_list
-
     # ---------------------------------------------------------------------
     # unarc(self, arc_engine_id, arc_name, fname_in_arc)
     # 입력값 : arc_engine_id - 압축 엔진 ID
