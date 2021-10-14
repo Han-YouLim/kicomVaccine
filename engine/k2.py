@@ -194,27 +194,8 @@ def define_options():
     parser.add_option("-r", "--arc",
                       action="store_true", dest="opt_arc",
                       default=False)
-    parser.add_option("-G",
-                      action="store_true", dest="opt_log",
-                      default=False)
-    parser.add_option("", "--log",
-                      metavar="FILE", dest="log_filename")
     parser.add_option("-I", "--list",
                       action="store_true", dest="opt_list",
-                      default=False)
-    parser.add_option("-e", "--app",
-                      action="store_true", dest="opt_app",
-                      default=False)
-    parser.add_option("-F", "--infp",
-                      metavar="PATH", dest="infp_path")
-    parser.add_option("", "--qname",  # 격리시 악성코드 이름 부여
-                      action="store_true", dest="opt_qname",
-                      default=False)
-    parser.add_option("", "--qhash",  # 격리시 Sha256 이름 부여
-                      action="store_true", dest="opt_qhash",
-                      default=False)
-    parser.add_option("-R", "--nor",
-                      action="store_true", dest="opt_nor",
                       default=False)
     parser.add_option("-V", "--vlist",
                       action="store_true", dest="opt_vlist",
@@ -228,36 +209,9 @@ def define_options():
     parser.add_option("-l", "--del",
                       action="store_true", dest="opt_del",
                       default=False)
-    parser.add_option("", "--no-color",
-                      action="store_true", dest="opt_nocolor",
-                      default=False)
-    parser.add_option("", "--move",
-                      action="store_true", dest="opt_move",
-                      default=False)
-    parser.add_option("", "--copy",
-                      action="store_true", dest="opt_copy",
-                      default=False)
-    parser.add_option("", "--update",
-                      action="store_true", dest="opt_update",
-                      default=False)
-    parser.add_option("", "--verbose",
-                      action="store_true", dest="opt_verbose",
-                      default=False)
-    parser.add_option("", "--sigtool",
-                      action="store_true", dest="opt_sigtool",
-                      default=False)
-    parser.add_option("", "--debug",
-                      action="store_true", dest="opt_debug",
-                      default=False)
     parser.add_option("-?", "--help",
                       action="store_true", dest="opt_help",
                       default=False)
-
-    # 숨겨진 기능 (인공지능 AI을 위해 만든 옵션)
-
-    parser.add_option("", "--feature",
-                      type="int", dest="opt_feature",
-                      default=0xffffffff)
 
     return parser
 # -------------------------------------------------------------------------
@@ -266,7 +220,6 @@ def define_options():
 def scan_callback(ret_value):
 
     global g_options
-    global display_scan_result  # 출력을 잠시 보류하는 구조체
 
     fs = ret_value['file_struct']
 
@@ -325,7 +278,6 @@ def print_options():
         -p,  --prompt          prompt for action
         -d,  --dis             disinfect files
         -l,  --del             delete infected files
-             --no-color        don't print with color
         -?,  --help            this help
                                * = default option'''
 
@@ -376,7 +328,6 @@ def update_callback(ret_file_info):
 # -------------------------------------------------------------------------
 # listvirus의 콜백 함수
 # -------------------------------------------------------------------------
-# listvirus의 콜백함수
 def listvirus_callback(plugin_name, vnames) :
     for vname in vnames:
         print('%-50s [%s.kmd]' %(vname, plugin_name))
@@ -445,17 +396,18 @@ def main():
     k2 = kavcore.k2engine.Engine()
 
     if not k2.set_plugins('plugins'): # 플로그인 엔진 설정
-        print("cloudbread Anti-Virus Engine set_plugins")
+        print_error('CloudBread AntiVirus Engine set_plugins')
         return 0
 
     kav = k2.create_instance() # 백신 엔진 인스턴스 생성
 
     if not kav:
-        print("cloudbread Anti-Virus Engine create_instance")
+        print_error('CloudBread AntiVirus Engine create_instance')
+        return 0
 
     if not kav.init(): #  전체 플러그인 엔진 초기화화
         print
-        print_error('cloudbread Anti-Virus Engine init')
+        print_error('CloudBread AntiVirus Engine init')
         return 0
 
     # 엔진 버전을 출력
