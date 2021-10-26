@@ -120,7 +120,7 @@ def convert_display_filename(real_filename):
     display_filename = unicode(real_filename, fsencoding).encode(sys.stdout.encoding,'replace')
     return display_filename
 
-def display_line(filename, message, message_color):
+def display_line(filename, message):
     filename += ' '
     filename = convert_display_filename(filename)
     len_fname = len(filename)
