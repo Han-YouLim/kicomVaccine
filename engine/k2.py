@@ -24,16 +24,16 @@ KAV_LASTYEAR = KAV_BUILDDATE[len(KAV_BUILDDATE)-4:]
 # -------------------------------------------------------------------------
 # 콘솔에 색깔 출력을 위한 클래스 및 함수들
 # -------------------------------------------------------------------------
-
-FOREGROUND_BLACK = 0x0000
-FOREGROUND_BLUE = 0x0001
-FOREGROUND_GREEN = 0x0002
-FOREGROUND_CYAN = 0x0003
-FOREGROUND_RED = 0x0004
-FOREGROUND_MAGENTA = 0x0005
-FOREGROUND_YELLOW = 0x0006
-FOREGROUND_GREY = 0x0007
-FOREGROUND_INTENSITY = 0x0008  # foreground color is intensified.
+#
+# FOREGROUND_BLACK = 0x0000
+# FOREGROUND_BLUE = 0x0001
+# FOREGROUND_GREEN = 0x0002
+# FOREGROUND_CYAN = 0x0003
+# FOREGROUND_RED = 0x0004
+# FOREGROUND_MAGENTA = 0x0005
+# FOREGROUND_YELLOW = 0x0006
+# FOREGROUND_GREY = 0x0007
+# FOREGROUND_INTENSITY = 0x0008  # foreground color is intensified.
 
 SHORT = c_short
 WORD = c_ushort
@@ -91,7 +91,7 @@ def cprint(msg, color):
     sys.stdout.flush()
 
 def print_error(msg):
-    cprint('Error: ', FOREGROUND_RED|FOREGROUND_INTENSITY)
+    #cprint('Error: ', FOREGROUND_RED|FOREGROUND_INTENSITY)
     print(msg)
 
 def getch():
@@ -140,8 +140,8 @@ def display_line(filename, message, message_color):
 
         fname = '%s ... %s' % (fname1, fname2)
 
-    cprint(fname + ' ', FOREGROUND_GREY)
-    cprint(message + '\n', message_color)
+    print(fname + ' ')
+    print(message + '\n', message_color)
 
 # -------------------------------------------------------------------------
 # print_k2logo()
@@ -154,7 +154,7 @@ Copyright (C) 2021-%s CloudBread. All rights reserved.
 
     print('------------------------------------------------------------')
     s = logo % (sys.platform.upper(), KAV_VERSION, KAV_BUILDDATE, KAV_LASTYEAR)
-    cprint(s, FOREGROUND_CYAN | FOREGROUND_INTENSITY)
+    print(s)
     print('------------------------------------------------------------')
 
 
@@ -228,16 +228,16 @@ def scan_callback(ret_value):
 
         vname = ret_value['virus_name']
         message = '%s : %s' %(state, vname)
-        message_color = FOREGROUND_RED |FOREGROUND_INTENSITY
+        #message_color = FOREGROUND_RED |FOREGROUND_INTENSITY
     else:
         message = 'ok'
-        message_color = FOREGROUND_GREY | FOREGROUND_INTENSITY
+        #message_color = FOREGROUND_GREY | FOREGROUND_INTENSITY
 
-    display_line(disp_name, message, message_color)
+    display_line(disp_name, message)
 
     if g_options.opt_prompt:
         while True and ret_value['result']:
-            cprint('Disinfect/Delete/Ignore/Quit? (d/l/i/q) : ', FOREGROUND_CYAN, FOREGROUND_INTENSITY)
+            print('Disinfect/Delete/Ignore/Quit? (d/l/i/q) : ')
             ch = getch().lower()
             print(ch)
 
@@ -296,16 +296,16 @@ def disinfect_callback(ret_value, action_type):
         elif action_type == kavcore.k2const.K2_ACTION_DELETE:
             message = 'deleted'
 
-        message_color = FOREGROUND_GREEN | FOREGROUND_INTENSITY
+        #message_color = FOREGROUND_GREEN | FOREGROUND_INTENSITY
     else:
         if action_type == kavcore.k2const.K2_ACTION_DISINFECT:
             message = 'disinfection failed'
         elif action_type == kavcore.k2const.K2_ACTION_DELETE:
             message = 'deletion failed'
 
-        message_color = FOREGROUND_RED | FOREGROUND_INTENSITY
+         #message_color = FOREGROUND_RED | FOREGROUND_INTENSITY
 
-    display_line(disp_name, message, message_color)
+    display_line(disp_name, message)
 
 # -------------------------------------------------------------------------
 # update의 콜백 함수
@@ -316,15 +316,15 @@ def update_callback(ret_file_info):
         disp_name = ret_file_info.get_filename()
 
         message = 'updated'
-        message_color = FOREGROUND_GREEN | FOREGROUND_INTENSITY
+        #message_color = FOREGROUND_GREEN | FOREGROUND_INTENSITY
 
-        display_line(disp_name, message, message_color)
+        display_line(disp_name, message)
 
 # -------------------------------------------------------------------------
 # listvirus의 콜백 함수
 # -------------------------------------------------------------------------
 def listvirus_callback(plugin_name, vnames) :
-    for vname in vnames:
+    for vname in vnames:\
         print('%-50s [%s.kmd]' %(vname, plugin_name))
 
 # -------------------------------------------------------------------------
@@ -334,13 +334,13 @@ def listvirus_callback(plugin_name, vnames) :
 # -------------------------------------------------------------------------
 def print_result(result):
 
-    cprint('Results:\n', FOREGROUND_GREY | FOREGROUND_INTENSITY)
-    cprint('Folders           :%d\n' % result['Folders'], FOREGROUND_GREY | FOREGROUND_INTENSITY)
-    cprint('Files             :%d\n' % result['Files'], FOREGROUND_GREY | FOREGROUND_INTENSITY)
+    print('Results:\n')
+    print('Folders           :%d\n' % result['Folders'])
+    print('Files             :%d\n' % result['Files'])
     #cprint('Packed            :%d\n' % result['Packed'], FOREGROUND_GREY | FOREGROUND_INTENSITY)
-    cprint('Infected files    :%d\n' % result['Infected_files'], FOREGROUND_GREY | FOREGROUND_INTENSITY)
-    cprint('Identified viruses:%d\n' % result['Identified_viruses'], FOREGROUND_GREY | FOREGROUND_INTENSITY)
-    cprint('I/O errors        :%d\n' % result['IO_errors'], FOREGROUND_GREY | FOREGROUND_INTENSITY)
+    print('Infected files    :%d\n' % result['Infected_files'])
+    print('Identified viruses:%d\n' % result['Identified_viruses'])
+    print('I/O errors        :%d\n' % result['IO_errors'])
 
 def print_usage():
     print('\nUsage: k2.py path[s] [options]')
@@ -408,11 +408,11 @@ def main():
     # 엔진 버전을 출력
     c = kav.get_version()
     msg = '\rLast updated %s UTC\n' % c.ctime()
-    cprint(msg, FOREGROUND_GREY)
+    print(msg)
 
     # 진단/치료 가능한 악성코드 수 출력
     msg = 'Signature number: %d\n\n' %kav.get_signum()
-    cprint(msg, FOREGROUND_GREY)
+    print(msg)
 
     kav.set_options(options) # 옵션을 설정
 
