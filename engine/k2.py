@@ -117,7 +117,7 @@ def getch():
 def convert_display_filename(real_filename):
     # 출력용 이름
     fsencoding = sys.getfilesystemencoding() or sys.getdefaultencoding()
-    display_filename = unicode(real_filename, fsencoding).encode(sys.stdout.encoding,'replace')
+    display_filename = unicode(real_filename, fsencoding).encode(str(sys.stdout.encoding),"replace")
     return display_filename
 
 def display_line(filename, message):
@@ -141,7 +141,7 @@ def display_line(filename, message):
         fname = '%s ... %s' % (fname1, fname2)
 
     print(fname + ' ')
-    print(message + '\n', message_color)
+    print(message + '\n')
 
 # -------------------------------------------------------------------------
 # print_k2logo()
