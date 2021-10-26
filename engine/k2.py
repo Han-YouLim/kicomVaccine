@@ -117,7 +117,7 @@ def getch():
 def convert_display_filename(real_filename):
     # 출력용 이름
     fsencoding = sys.getfilesystemencoding() or sys.getdefaultencoding()
-    display_filename = unicode(real_filename, fsencoding).encode(str(sys.stdout.encoding),"replace")
+    display_filename = unicode(real_filename, fsencoding).encode('cp949') #서버상 오류 발생하여 소스 코드 수정
     return display_filename
 
 def display_line(filename, message):
